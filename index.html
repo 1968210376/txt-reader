@@ -406,10 +406,7 @@
                 const div = document.createElement('div');
                 div.className = 'file-item' + (index === currentFileIndex ? ' active' : '');
                 div.innerHTML = `<span class="file-name">${index + 1}. ${f.name}</span>`;
-                div.onclick = () => {
-                    // 用户点击其他文件时，需要重新选择
-                    document.getElementById('statusBar').textContent = '请重新选择文件夹';
-                };
+                div.onclick = () => selectFile(index);
                 fileList.appendChild(div);
             });
             
@@ -417,6 +414,9 @@
             displayKaraoke(currentParagraphIndex);
             updateProgress(currentParagraphIndex + 1, paragraphs.length);
             document.getElementById('statusBar').textContent = `已恢复: ${cachedData.files[currentFileIndex].name} - 第 ${currentParagraphIndex + 1} 段`;
+            
+            // 恢复files数组（虚拟文件对象，只有名称）
+            files = cachedData.files.map(f => ({ name: f.name }));
         }
         
         function clearCacheAndHide() {
@@ -635,8 +635,10 @@
             };
             
             currentUtterance.onend = function() {
+                // 先保存当前进度，再加1
+                const completedIndex = currentParagraphIndex;
                 currentParagraphIndex++;
-                saveCache(); // 保存进度
+                saveCache();
                 if (isPlaying && !isPaused) readNextParagraph();
             };
             

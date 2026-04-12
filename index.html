@@ -186,44 +186,28 @@
         
         function loadVoices() {
             voices = speechSynthesis.getVoices();
-            if (voices.length === 0) {
-                speechSynthesis.onvoiceschanged = function() {
-                    voices = speechSynthesis.getVoices();
-                    if (voices.length > 0) {
-                        populateVoiceSelect();
-                    }
-                };
-                // 多次重试
-                let attempts = 0;
-                const maxAttempts = 20;
-                const retryInterval = setInterval(function() {
-                    attempts++;
-                    voices = speechSynthesis.getVoices();
-                    if (voices.length > 0) {
-                        populateVoiceSelect();
-                        clearInterval(retryInterval);
-                    } else if (attempts >= maxAttempts) {
-                        // 超时后显示默认选项
-                        const select = document.getElementById('voiceSelect');
-                        select.innerHTML = '<option value="-1">默认语音</option>';
-                        currentVoiceIndex = -1;
-                        clearInterval(retryInterval);
-                    }
-                }, 300);
-            } else {
+            if (voices.length > 0) {
                 populateVoiceSelect();
             }
+            // 总是监听voiceschanged事件
+            speechSynthesis.onvoiceschanged = function() {
+                voices = speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    populateVoiceSelect();
+                }
+            };
         }
         
         function populateVoiceSelect() {
             const select = document.getElementById('voiceSelect');
-            select.innerHTML = '';
             
             if (voices.length === 0) {
-                select.innerHTML = '<option value="-1">默认语音</option>';
+                select.innerHTML = '<option value="-1">加载中...</option>';
                 currentVoiceIndex = -1;
                 return;
             }
+            
+            select.innerHTML = '';
             
             // 分类语音：在线和本地
             let onlineVoices = [];

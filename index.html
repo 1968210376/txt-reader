@@ -165,48 +165,25 @@
         let speechSynthesis = window.speechSynthesis, currentUtterance = null, voices = [];
         let paragraphs = [], currentParagraphIndex = 0;
         let currentVoiceIndex = -1;
-        let voicesLoaded = false;
         
         // 只保留指定的在线语音
         const ALLOWED_ONLINE_VOICES = ['xiaoxiao', 'xiaoyi', 'yunxi'];
         
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化语音
-            initVoices();
-            
+            loadVoices();
             document.getElementById('folderInput').addEventListener('change', handleFileSelect);
             document.getElementById('fileInput').addEventListener('change', handleFileSelect);
             document.getElementById('rateSlider').addEventListener('input', function() { document.getElementById('rateValue').textContent = this.value + 'x'; });
             document.getElementById('pitchSlider').addEventListener('input', function() { document.getElementById('pitchValue').textContent = this.value; });
-            
-            // 点击播放按钮时强制加载语音
-            document.getElementById('playBtn').addEventListener('click', function() {
-                if (!voicesLoaded) {
-                    forceLoadVoices();
-                }
-            });
         });
         
-        function initVoices() {
-            // 尝试获取语音
+        function loadVoices() {
             voices = speechSynthesis.getVoices();
-            
-            if (voices.length > 0) {
-                voicesLoaded = true;
-                populateVoiceSelect();
+            if (voices.length === 0) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+                setTimeout(loadVoices, 500);
             } else {
-                // 监听语音变化事件
-                speechSynthesis.onvoiceschanged = function() {
-                    voices = speechSynthesis.getVoices();
-                    if (voices.length > 0) {
-                        voicesLoaded = true;
-                        populateVoiceSelect();
-                    }
-                };
-                
-                // 移动端可能无法预先获取语音列表，显示默认选项
-                const select = document.getElementById('voiceSelect');
-                select.innerHTML = '<option value="-1">默认语音</option>';
+                populateVoiceSelect();
             }
         }
         
@@ -215,8 +192,7 @@
             select.innerHTML = '';
             
             if (voices.length === 0) {
-                select.innerHTML = '<option value="-1">默认语音</option>';
-                currentVoiceIndex = -1;
+                select.innerHTML = '<option value="">未检测到语音</option>';
                 return;
             }
             
@@ -224,7 +200,7 @@
             let onlineVoices = [];
             let localVoices = [];
             
-        // 只保留指定的在线语音
+            // 只保留指定的在线语音
             const ALLOWED_ONLINE_VOICES = ['xiaoxiao', 'xiaoyi', 'yunxi'];
             
             voices.forEach((voice, i) => {
@@ -317,12 +293,8 @@
             
             select.addEventListener('change', function() {
                 currentVoiceIndex = parseInt(this.value);
-                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                    const voice = voices[currentVoiceIndex];
-                    updateVoiceStatus(!voice.localService);
-                } else {
-                    updateVoiceStatus(false);
-                }
+                const voice = voices[currentVoiceIndex];
+                updateVoiceStatus(!voice.localService);
             });
         }
         
@@ -400,53 +372,16 @@
         
         function jumpToParagraph(index) {
             if (index < 0 || index >= paragraphs.length) return;
-            
-            // 取消之前的语音
-            speechSynthesis.cancel();
-            
-            // 设置当前段落索引
             currentParagraphIndex = index;
-            
-            // 立即更新高亮显示
+            speechSynthesis.cancel();
             displayKaraoke(index);
             updateProgress(index + 1, paragraphs.length);
             
-            // 如果正在播放，从点击的段落开始朗读
             if (isPlaying || isPaused) {
                 isPaused = false;
                 isPlaying = true;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-                
-                // 直接朗读当前段落，不调用readNextParagraph
-                const para = paragraphs[currentParagraphIndex];
-                const thisIndex = currentParagraphIndex;
-                
-                currentUtterance = new SpeechSynthesisUtterance(para);
-                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                    currentUtterance.voice = voices[currentVoiceIndex];
-                }
-                currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
-                currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
-                
-                currentUtterance.onstart = function() {
-                    displayKaraoke(thisIndex);
-                    updateProgress(thisIndex + 1, paragraphs.length);
-                };
-                
-                currentUtterance.onend = function() {
-                    currentParagraphIndex++;
-                    if (isPlaying && !isPaused) readNextParagraph();
-                };
-                
-                currentUtterance.onerror = function(e) {
-                    if (e.error === 'network' || e.error === 'not-allowed') {
-                        fallbackToLocalVoice();
-                    }
-                    currentParagraphIndex++;
-                    if (isPlaying && !isPaused) readNextParagraph();
-                };
-                
-                speechSynthesis.speak(currentUtterance);
+                readNextParagraph();
             }
         }
         
@@ -503,7 +438,8 @@
             if (isPaused) return;
             
             const para = paragraphs[currentParagraphIndex];
-            const thisIndex = currentParagraphIndex;
+            displayKaraoke(currentParagraphIndex);
+            updateProgress(currentParagraphIndex + 1, paragraphs.length);
             
             currentUtterance = new SpeechSynthesisUtterance(para);
             
@@ -514,12 +450,6 @@
             
             currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
             currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
-            
-            // 在语音实际开始播放时才更新高亮
-            currentUtterance.onstart = function() {
-                displayKaraoke(thisIndex);
-                updateProgress(thisIndex + 1, paragraphs.length);
-            };
             
             currentUtterance.onend = function() {
                 currentParagraphIndex++;

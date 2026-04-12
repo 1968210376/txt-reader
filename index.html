@@ -204,130 +204,10 @@
                     }
                 };
                 
-                // 强制触发语音加载（某些移动端浏览器需要这个）
-                try {
-                    const testUtterance = new SpeechSynthesisUtterance('');
-                    speechSynthesis.speak(testUtterance);
-                    speechSynthesis.cancel();
-                } catch(e) {}
-                
-                // 多次重试
-                let attempts = 0;
-                const maxAttempts = 20;
-                const retryInterval = setInterval(function() {
-                    attempts++;
-                    voices = speechSynthesis.getVoices();
-                    
-                    if (voices.length > 0) {
-                        voicesLoaded = true;
-                        populateVoiceSelect();
-                        clearInterval(retryInterval);
-                    } else if (attempts >= maxAttempts) {
-                        const select = document.getElementById('voiceSelect');
-                        select.innerHTML = '<option value="">点击播放按钮加载语音</option>';
-                        clearInterval(retryInterval);
-                    }
-                }, 300);
+                // 移动端可能无法预先获取语音列表，显示默认选项
+                const select = document.getElementById('voiceSelect');
+                select.innerHTML = '<option value="-1">默认语音</option>';
             }
-        }
-        
-        function forceLoadVoicesAndPlay() {
-            document.getElementById('statusBar').textContent = '正在加载语音...';
-            
-            // 先尝试播放一个短语音来触发引擎
-            const testUtterance = new SpeechSynthesisUtterance('准备开始');
-            testUtterance.rate = 3;
-            testUtterance.volume = 1;
-            
-            testUtterance.onstart = function() {
-                speechSynthesis.cancel();
-                voices = speechSynthesis.getVoices();
-                voicesLoaded = true;
-                populateVoiceSelect();
-                // 语音加载成功后开始播放
-                setTimeout(function() {
-                    if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                    currentParagraphIndex = 0;
-                    startReading();
-                }, 100);
-            };
-            
-            testUtterance.onend = function() {
-                voices = speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    voicesLoaded = true;
-                    populateVoiceSelect();
-                }
-                // 开始播放
-                if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                currentParagraphIndex = 0;
-                startReading();
-            };
-            
-            testUtterance.onerror = function(e) {
-                console.log('Voice load error:', e);
-                // 即使出错也尝试播放
-                if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                currentParagraphIndex = 0;
-                startReading();
-            };
-            
-            speechSynthesis.speak(testUtterance);
-            
-            // 同时设置超时，如果语音引擎没有响应，直接开始播放
-            setTimeout(function() {
-                voices = speechSynthesis.getVoices();
-                if (voices.length > 0 && !voicesLoaded) {
-                    voicesLoaded = true;
-                    populateVoiceSelect();
-                }
-                if (!isPlaying && !isPaused) {
-                    if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                    currentParagraphIndex = 0;
-                    startReading();
-                }
-            }, 1500);
-        }
-        
-        function forceLoadVoices() {
-            // 强制触发语音引擎 - 播放一个短音频
-            const testText = '正在加载语音';
-            const utterance = new SpeechSynthesisUtterance(testText);
-            utterance.rate = 2; // 快速播放
-            utterance.volume = 0.5;
-            utterance.onstart = function() {
-                // 语音开始后立即取消
-                speechSynthesis.cancel();
-                // 现在应该能获取到语音列表了
-                voices = speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    voicesLoaded = true;
-                    populateVoiceSelect();
-                }
-            };
-            utterance.onerror = function() {
-                // 出错时也尝试获取
-                voices = speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    voicesLoaded = true;
-                    populateVoiceSelect();
-                }
-            };
-            speechSynthesis.speak(utterance);
-            
-            // 同时启动定时器持续检查
-            let attempts = 0;
-            const checkInterval = setInterval(function() {
-                attempts++;
-                voices = speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    voicesLoaded = true;
-                    populateVoiceSelect();
-                    clearInterval(checkInterval);
-                } else if (attempts >= 30) {
-                    clearInterval(checkInterval);
-                }
-            }, 200);
         }
         
         function populateVoiceSelect() {
@@ -335,7 +215,8 @@
             select.innerHTML = '';
             
             if (voices.length === 0) {
-                select.innerHTML = '<option value="">加载语音中...</option>';
+                select.innerHTML = '<option value="-1">默认语音</option>';
+                currentVoiceIndex = -1;
                 return;
             }
             
@@ -436,8 +317,12 @@
             
             select.addEventListener('change', function() {
                 currentVoiceIndex = parseInt(this.value);
-                const voice = voices[currentVoiceIndex];
-                updateVoiceStatus(!voice.localService);
+                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
+                    const voice = voices[currentVoiceIndex];
+                    updateVoiceStatus(!voice.localService);
+                } else {
+                    updateVoiceStatus(false);
+                }
             });
         }
         
@@ -583,12 +468,6 @@
         }
         
         function togglePlayPause() {
-            // 如果语音未加载，先尝试强制加载
-            if (!voicesLoaded && voices.length === 0) {
-                forceLoadVoicesAndPlay();
-                return;
-            }
-            
             if (isPlaying) {
                 isPaused = true; isPlaying = false;
                 speechSynthesis.pause();

@@ -445,8 +445,7 @@
             if (isPaused) return;
             
             const para = paragraphs[currentParagraphIndex];
-            displayKaraoke(currentParagraphIndex);
-            updateProgress(currentParagraphIndex + 1, paragraphs.length);
+            const thisIndex = currentParagraphIndex;
             
             currentUtterance = new SpeechSynthesisUtterance(para);
             
@@ -457,6 +456,12 @@
             
             currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
             currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
+            
+            // 在语音实际开始播放时才更新高亮
+            currentUtterance.onstart = function() {
+                displayKaraoke(thisIndex);
+                updateProgress(thisIndex + 1, paragraphs.length);
+            };
             
             currentUtterance.onend = function() {
                 currentParagraphIndex++;

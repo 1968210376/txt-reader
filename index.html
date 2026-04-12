@@ -234,11 +234,19 @@
                 }
             });
             
-            // 添加在线语音（优先）
+            // 添加在线语音（优先），按指定顺序排列
             if (onlineVoices.length > 0) {
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = '在线语音 (需联网)';
-                onlineVoices.forEach(v => {
+                
+                // 按优先顺序排列
+                const orderedVoices = [];
+                ALLOWED_ONLINE_VOICES.forEach(voiceName => {
+                    const found = onlineVoices.find(v => v.name.toLowerCase().includes(voiceName));
+                    if (found) orderedVoices.push(found);
+                });
+                
+                orderedVoices.forEach(v => {
                     const option = document.createElement('option');
                     option.value = v.index;
                     option.textContent = v.name;
@@ -246,9 +254,15 @@
                 });
                 select.appendChild(optgroup);
                 
-                // 默认选择第一个在线语音
-                currentVoiceIndex = onlineVoices[0].index;
-                select.value = currentVoiceIndex;
+                // 默认选择xiaoxiao
+                const xiaoxiaoVoice = orderedVoices.find(v => v.name.toLowerCase().includes('xiaoxiao'));
+                if (xiaoxiaoVoice) {
+                    currentVoiceIndex = xiaoxiaoVoice.index;
+                    select.value = currentVoiceIndex;
+                } else if (orderedVoices.length > 0) {
+                    currentVoiceIndex = orderedVoices[0].index;
+                    select.value = currentVoiceIndex;
+                }
                 updateVoiceStatus(true);
             }
             

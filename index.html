@@ -46,16 +46,6 @@
             font-weight: 600;
         }
         
-        .file-section {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .file-input-wrapper input[type="file"] {
-            display: none;
-        }
-        
         .file-btn {
             display: block;
             width: 100%;
@@ -67,10 +57,19 @@
             font-size: 1rem;
             cursor: pointer;
             text-align: center;
+            margin-bottom: 10px;
         }
         
         .file-btn:active {
             transform: scale(0.98);
+        }
+        
+        .file-btn-secondary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+        
+        input[type="file"] {
+            display: none;
         }
         
         .file-list {
@@ -84,9 +83,6 @@
             padding: 12px 15px;
             border-bottom: 1px solid #eee;
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         
         .file-item:last-child {
@@ -107,17 +103,7 @@
         }
         
         .file-name {
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             font-size: 0.95rem;
-        }
-        
-        .file-index {
-            color: #999;
-            font-size: 0.85rem;
-            margin-right: 10px;
         }
         
         .content-preview {
@@ -149,11 +135,6 @@
             flex-direction: column;
             align-items: center;
             gap: 5px;
-            transition: transform 0.1s;
-        }
-        
-        .ctrl-btn:active {
-            transform: scale(0.95);
         }
         
         .ctrl-btn .icon {
@@ -184,23 +165,17 @@
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            margin-bottom: 15px;
         }
         
         .setting-group {
             flex: 1;
-            min-width: 150px;
+            min-width: 140px;
         }
         
         .setting-label {
             font-size: 0.9rem;
             color: #666;
             margin-bottom: 5px;
-        }
-        
-        .setting-value {
-            font-weight: bold;
-            color: #667eea;
         }
         
         select {
@@ -251,17 +226,10 @@
             height: 100%;
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             width: 0%;
-            transition: width 0.3s;
         }
         
         ::-webkit-scrollbar {
             width: 6px;
-            height: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
         }
         
         ::-webkit-scrollbar-thumb {
@@ -274,18 +242,8 @@
             color: #1565c0;
             padding: 12px 15px;
             border-radius: 10px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             line-height: 1.5;
-        }
-        
-        .tips strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .voice-loading {
-            color: #999;
-            font-style: italic;
         }
         
         @media (max-width: 400px) {
@@ -302,13 +260,11 @@
         <!-- 文件选择 -->
         <div class="card">
             <div class="card-title">选择文件</div>
-            <div class="file-section">
-                <div class="file-input-wrapper">
-                    <input type="file" id="fileInput" multiple accept=".txt" webkitdirectory>
-                    <label for="fileInput" class="file-btn">选择文件夹 (选择任意txt文件)</label>
-                </div>
-                <div class="file-list" id="fileList"></div>
-            </div>
+            <input type="file" id="folderInput" multiple webkitdirectory>
+            <input type="file" id="fileInput" multiple accept=".txt">
+            <label for="folderInput" class="file-btn">选择文件夹 (电脑端)</label>
+            <label for="fileInput" class="file-btn file-btn-secondary">选择文件 (手机端)</label>
+            <div class="file-list" id="fileList"></div>
         </div>
         
         <!-- 内容预览 -->
@@ -351,16 +307,14 @@
             <div class="settings">
                 <div class="setting-group">
                     <div class="setting-label">语音选择</div>
-                    <select id="voiceSelect">
-                        <option value="">加载语音中...</option>
-                    </select>
+                    <select id="voiceSelect"></select>
                 </div>
                 <div class="setting-group">
-                    <div class="setting-label">语速: <span class="setting-value" id="rateValue">1.0x</span></div>
+                    <div class="setting-label">语速: <span id="rateValue">1.0x</span></div>
                     <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1">
                 </div>
                 <div class="setting-group">
-                    <div class="setting-label">音调: <span class="setting-value" id="pitchValue">1.0</span></div>
+                    <div class="setting-label">音调: <span id="pitchValue">1.0</span></div>
                     <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1">
                 </div>
             </div>
@@ -370,17 +324,15 @@
         <div class="status-bar" id="statusBar">就绪 - 请选择txt文件开始朗读</div>
         
         <!-- 提示 -->
-        <div class="tips" id="tips">
-            <strong>语音说明：</strong>
-            本工具使用浏览器内置语音引擎。如需更好的中文语音：<br>
-            • <b>Edge浏览器</b>：自带高质量在线中文语音(如Microsoft Huihui)<br>
-            • <b>Chrome浏览器</b>：需安装中文语音扩展<br>
-            • <b>手机端</b>：推荐使用Edge浏览器打开
+        <div class="tips">
+            <strong>使用提示：</strong>
+            • 电脑端：点击"选择文件夹"加载整个文件夹<br>
+            • 手机端：点击"选择文件"选择一个或多个txt文件<br>
+            • 推荐使用Edge浏览器获得更好的中文语音
         </div>
     </div>
 
     <script>
-        // 状态变量
         let files = [];
         let currentFileIndex = -1;
         let currentContent = '';
@@ -389,237 +341,146 @@
         let speechSynthesis = window.speechSynthesis;
         let currentUtterance = null;
         let voices = [];
-        let retryCount = 0;
         
-        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            setupEventListeners();
             loadVoices();
-            
-            if (!('speechSynthesis' in window)) {
-                document.getElementById('statusBar').textContent = '错误：您的浏览器不支持语音合成功能';
-            }
+            document.getElementById('folderInput').addEventListener('change', handleFolderSelect);
+            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+            document.getElementById('rateSlider').addEventListener('input', function() {
+                document.getElementById('rateValue').textContent = this.value + 'x';
+            });
+            document.getElementById('pitchSlider').addEventListener('input', function() {
+                document.getElementById('pitchValue').textContent = this.value;
+            });
         });
         
-        // 加载语音列表
         function loadVoices() {
             voices = speechSynthesis.getVoices();
-            
-            // 如果语音列表为空，等待voiceschanged事件
             if (voices.length === 0) {
-                speechSynthesis.onvoiceschanged = function() {
-                    voices = speechSynthesis.getVoices();
-                    populateVoiceSelect();
-                };
-                // 某些浏览器需要触发语音才能加载列表
-                speechSynthesis.getVoices();
-                
-                // 延迟重试
-                setTimeout(function() {
-                    if (voices.length === 0 && retryCount < 5) {
-                        retryCount++;
-                        loadVoices();
-                    }
-                }, 500);
+                speechSynthesis.onvoiceschanged = loadVoices;
+                setTimeout(loadVoices, 500);
             } else {
                 populateVoiceSelect();
             }
         }
         
-        // 填充语音选择
         function populateVoiceSelect() {
             const select = document.getElementById('voiceSelect');
             select.innerHTML = '';
             
             if (voices.length === 0) {
-                select.innerHTML = '<option value="">未检测到语音，请刷新页面</option>';
+                select.innerHTML = '<option value="">未检测到语音</option>';
                 return;
             }
             
-            // 按语言分组
-            const chineseVoices = [];
-            const otherVoices = [];
-            
-            voices.forEach(voice => {
+            // 中文语音优先
+            voices.forEach((voice, i) => {
+                const option = document.createElement('option');
+                option.value = i;
                 const lang = voice.lang.toLowerCase();
-                if (lang.includes('zh') || lang.includes('cn') || lang.includes('chinese')) {
-                    chineseVoices.push(voice);
+                if (lang.includes('zh') || lang.includes('cn')) {
+                    option.textContent = '★ ' + voice.name + (voice.localService ? '' : ' [在线]');
+                    select.insertBefore(option, select.firstChild);
                 } else {
-                    otherVoices.push(voice);
+                    option.textContent = voice.name + ' (' + voice.lang + ')';
+                    select.appendChild(option);
                 }
             });
-            
-            // 添加中文语音
-            if (chineseVoices.length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = '中文语音 (推荐)';
-                chineseVoices.forEach((voice, i) => {
-                    const option = document.createElement('option');
-                    option.value = voices.indexOf(voice);
-                    option.textContent = voice.name + (voice.localService ? '' : ' [在线]');
-                    optgroup.appendChild(option);
-                });
-                select.appendChild(optgroup);
-            }
-            
-            // 添加其他语音
-            if (otherVoices.length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = '其他语音';
-                otherVoices.slice(0, 20).forEach(voice => {
-                    const option = document.createElement('option');
-                    option.value = voices.indexOf(voice);
-                    option.textContent = `${voice.name} (${voice.lang})`;
-                    optgroup.appendChild(option);
-                });
-                select.appendChild(optgroup);
-            }
-            
-            // 更新提示
-            const hasOnlineVoice = chineseVoices.some(v => !v.localService);
-            if (hasOnlineVoice) {
-                document.getElementById('tips').innerHTML = '<strong>已检测到在线语音</strong><br>选择带[在线]标记的语音效果更好。如语音列表为空，请点击朗读按钮触发加载。';
-            } else if (chineseVoices.length === 0) {
-                document.getElementById('tips').innerHTML = '<strong>未检测到中文语音</strong><br>建议使用Edge浏览器，或安装中文语音包。当前只能使用其他语言语音朗读中文。';
+        }
+        
+        function handleFolderSelect(e) {
+            const selected = Array.from(e.target.files).filter(f => f.name.endsWith('.txt'));
+            if (selected.length > 0) {
+                files = selected.sort((a, b) => a.name.localeCompare(b.name));
+                updateFileList();
+            } else {
+                document.getElementById('statusBar').textContent = '该文件夹没有txt文件';
             }
         }
         
-        // 设置事件监听
-        function setupEventListeners() {
-            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
-            
-            document.getElementById('rateSlider').addEventListener('input', function() {
-                document.getElementById('rateValue').textContent = this.value + 'x';
-            });
-            
-            document.getElementById('pitchSlider').addEventListener('input', function() {
-                document.getElementById('pitchValue').textContent = this.value;
-            });
-        }
-        
-        // 处理文件选择
         function handleFileSelect(e) {
-            const selectedFiles = Array.from(e.target.files);
-            files = selectedFiles.filter(f => f.name.endsWith('.txt')).sort((a, b) => a.name.localeCompare(b.name));
-            
-            if (files.length === 0) {
-                document.getElementById('statusBar').textContent = '未找到txt文件';
-                return;
+            const selected = Array.from(e.target.files).filter(f => f.name.endsWith('.txt'));
+            if (selected.length > 0) {
+                files = selected.sort((a, b) => a.name.localeCompare(b.name));
+                updateFileList();
+            } else {
+                document.getElementById('statusBar').textContent = '请选择txt文件';
             }
-            
+        }
+        
+        function updateFileList() {
             const fileList = document.getElementById('fileList');
             fileList.innerHTML = '';
-            
             files.forEach((file, index) => {
                 const div = document.createElement('div');
                 div.className = 'file-item';
-                div.innerHTML = `
-                    <span class="file-index">${index + 1}.</span>
-                    <span class="file-name">${file.name}</span>
-                `;
+                div.innerHTML = `<span class="file-name">${index + 1}. ${file.name}</span>`;
                 div.onclick = () => selectFile(index);
                 fileList.appendChild(div);
             });
-            
             document.getElementById('statusBar').textContent = `已加载 ${files.length} 个文件`;
+            currentFileIndex = -1;
         }
         
-        // 选择文件
         function selectFile(index) {
-            if (index < 0 || index >= files.length) return;
-            
             currentFileIndex = index;
-            
             document.querySelectorAll('.file-item').forEach((item, i) => {
                 item.classList.toggle('active', i === index);
             });
-            
             const reader = new FileReader();
             reader.onload = function(e) {
                 currentContent = e.target.result;
-                const preview = currentContent.length > 500 
-                    ? currentContent.substring(0, 500) + '...' 
-                    : currentContent;
-                document.getElementById('contentPreview').textContent = preview;
+                document.getElementById('contentPreview').textContent = currentContent.substring(0, 500);
                 document.getElementById('statusBar').textContent = `当前: ${files[index].name}`;
             };
             reader.readAsText(files[index], 'UTF-8');
         }
         
-        // 播放/停止
         function togglePlay() {
             if (isPlaying) {
                 stopReading();
             } else {
-                if (currentFileIndex < 0 && files.length > 0) {
-                    selectFile(0);
-                }
+                if (currentFileIndex < 0 && files.length > 0) selectFile(0);
                 startReading();
             }
         }
         
-        // 开始朗读
         function startReading() {
             if (!currentContent) {
-                document.getElementById('statusBar').textContent = '请先选择要朗读的文件';
+                document.getElementById('statusBar').textContent = '请先选择文件';
                 return;
             }
-            
             stopReading();
-            
-            // 如果语音列表为空，尝试重新加载
-            if (voices.length === 0) {
-                voices = speechSynthesis.getVoices();
-                populateVoiceSelect();
-            }
+            if (voices.length === 0) voices = speechSynthesis.getVoices();
             
             isPlaying = true;
             isPaused = false;
-            
-            updatePlayButton();
+            document.getElementById('playBtn').innerHTML = '<span class="icon">⏹</span><span>停止</span>';
             document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
             
-            document.querySelectorAll('.file-item').forEach((item, i) => {
-                item.classList.toggle('playing', i === currentFileIndex);
-            });
-            
             currentUtterance = new SpeechSynthesisUtterance(currentContent);
-            
-            // 设置语音
             const voiceIndex = document.getElementById('voiceSelect').value;
-            if (voiceIndex !== '' && voices[voiceIndex]) {
-                currentUtterance.voice = voices[voiceIndex];
-            }
-            
-            // 设置参数
+            if (voiceIndex && voices[voiceIndex]) currentUtterance.voice = voices[voiceIndex];
             currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
             currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
             
             currentUtterance.onend = function() {
-                if (isPlaying && !isPaused) {
-                    onReadingComplete();
+                if (isPlaying) {
+                    isPlaying = false;
+                    document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>朗读</span>';
+                    document.getElementById('statusBar').textContent = '朗读完成';
                 }
             };
-            
             currentUtterance.onerror = function(e) {
-                console.error('语音错误:', e);
-                document.getElementById('statusBar').textContent = '朗读出错: ' + (e.error || '未知错误');
-            };
-            
-            currentUtterance.onboundary = function(e) {
-                const progress = (e.charIndex / currentContent.length) * 100;
-                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('statusBar').textContent = '朗读出错: ' + e.error;
             };
             
             speechSynthesis.speak(currentUtterance);
         }
         
-        // 暂停/继续
         function togglePause() {
             if (!isPlaying) return;
-            
             isPaused = !isPaused;
-            
             if (isPaused) {
                 speechSynthesis.pause();
                 document.getElementById('statusBar').textContent = '已暂停';
@@ -629,53 +490,27 @@
             }
         }
         
-        // 停止朗读
         function stopReading() {
             isPlaying = false;
             isPaused = false;
             speechSynthesis.cancel();
-            document.getElementById('progressFill').style.width = '0%';
-            updatePlayButton();
+            document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>朗读</span>';
             document.getElementById('statusBar').textContent = '已停止';
         }
         
-        // 朗读完成
-        function onReadingComplete() {
-            isPlaying = false;
-            document.getElementById('progressFill').style.width = '100%';
-            updatePlayButton();
-            document.getElementById('statusBar').textContent = `朗读完成: ${files[currentFileIndex].name}`;
-        }
-        
-        // 更新播放按钮
-        function updatePlayButton() {
-            const btn = document.getElementById('playBtn');
-            if (isPlaying) {
-                btn.innerHTML = '<span class="icon">⏹</span><span>停止</span>';
-            } else {
-                btn.innerHTML = '<span class="icon">▶</span><span>朗读</span>';
-            }
-        }
-        
-        // 上一章
         function prevChapter() {
             if (currentFileIndex > 0) {
                 selectFile(currentFileIndex - 1);
-                if (isPlaying) {
-                    startReading();
-                }
+                if (isPlaying) startReading();
             } else {
                 document.getElementById('statusBar').textContent = '已经是第一章了';
             }
         }
         
-        // 下一章
         function nextChapter() {
             if (currentFileIndex < files.length - 1) {
                 selectFile(currentFileIndex + 1);
-                if (isPlaying) {
-                    startReading();
-                }
+                if (isPlaying) startReading();
             } else {
                 document.getElementById('statusBar').textContent = '已经是最后一章了';
             }

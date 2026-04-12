@@ -166,8 +166,15 @@
         let paragraphs = [], currentParagraphIndex = 0;
         let currentVoiceIndex = -1;
         
-        // 只保留指定的在线语音
-        const ALLOWED_ONLINE_VOICES = ['xiaoxiao', 'xiaoyi', 'yunxi'];
+        // 常用中文语音名称（用于匹配）
+        const PREFERRED_VOICES = [
+            { name: 'xiaoxiao', label: '晓晓(女声)', type: 'online' },
+            { name: 'yunxi', label: '云希(男声)', type: 'online' },
+            { name: 'huihui', label: 'Huihui(女声)', type: 'local' },
+            { name: 'kangkang', label: 'Kangkang(男声)', type: 'local' },
+            { name: 'yaoyao', label: 'Yaoyao(女声)', type: 'local' },
+            { name: 'chinese', label: '中文语音', type: 'auto' },
+        ];
         
         document.addEventListener('DOMContentLoaded', function() {
             loadVoices();
@@ -200,9 +207,6 @@
             let onlineVoices = [];
             let localVoices = [];
             
-            // 只保留指定的在线语音
-            const ALLOWED_ONLINE_VOICES = ['xiaoxiao', 'xiaoyi', 'yunxi'];
-            
             voices.forEach((voice, i) => {
                 const lang = voice.lang.toLowerCase();
                 const name = voice.name.toLowerCase();
@@ -215,31 +219,19 @@
                         isLocal: voice.localService
                     };
                     
-                    // 过滤在线语音，只保留指定的
-                    if (!voice.localService) {
-                        const isAllowed = ALLOWED_ONLINE_VOICES.some(v => name.includes(v));
-                        if (isAllowed) {
-                            onlineVoices.push(voiceInfo);
-                        }
-                    } else {
+                    if (voice.localService) {
                         localVoices.push(voiceInfo);
+                    } else {
+                        onlineVoices.push(voiceInfo);
                     }
                 }
             });
             
-            // 添加在线语音（优先），按指定顺序排列
+            // 添加在线语音（优先）
             if (onlineVoices.length > 0) {
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = '在线语音 (需联网)';
-                
-                // 按优先顺序排列
-                const orderedVoices = [];
-                ALLOWED_ONLINE_VOICES.forEach(voiceName => {
-                    const found = onlineVoices.find(v => v.name.toLowerCase().includes(voiceName));
-                    if (found) orderedVoices.push(found);
-                });
-                
-                orderedVoices.forEach(v => {
+                onlineVoices.forEach(v => {
                     const option = document.createElement('option');
                     option.value = v.index;
                     option.textContent = v.name;
@@ -247,15 +239,9 @@
                 });
                 select.appendChild(optgroup);
                 
-                // 默认选择xiaoxiao
-                const xiaoxiaoVoice = orderedVoices.find(v => v.name.toLowerCase().includes('xiaoxiao'));
-                if (xiaoxiaoVoice) {
-                    currentVoiceIndex = xiaoxiaoVoice.index;
-                    select.value = currentVoiceIndex;
-                } else if (orderedVoices.length > 0) {
-                    currentVoiceIndex = orderedVoices[0].index;
-                    select.value = currentVoiceIndex;
-                }
+                // 默认选择第一个在线语音
+                currentVoiceIndex = onlineVoices[0].index;
+                select.value = currentVoiceIndex;
                 updateVoiceStatus(true);
             }
             
@@ -389,7 +375,7 @@
                 isPlaying = true;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
                 
-                // 直接朗读当前段落，不调用readNextParagraph
+                // 直接朗读当前段落
                 const para = paragraphs[currentParagraphIndex];
                 const thisIndex = currentParagraphIndex;
                 

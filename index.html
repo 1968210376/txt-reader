@@ -166,6 +166,10 @@
         let paragraphs = [], currentParagraphIndex = 0;
         let currentVoiceIndex = -1;
         
+        // 缓存相关
+        const CACHE_KEY = 'txt_reader_cache';
+        let cachedData = null;
+        
         // 常用中文语音名称（用于匹配）
         const PREFERRED_VOICES = [
             { name: 'xiaoxiao', label: '晓晓(女声)', type: 'online' },
@@ -178,10 +182,17 @@
         
         document.addEventListener('DOMContentLoaded', function() {
             loadVoices();
+            loadCache(); // 加载缓存
             document.getElementById('folderInput').addEventListener('change', handleFileSelect);
             document.getElementById('fileInput').addEventListener('change', handleFileSelect);
-            document.getElementById('rateSlider').addEventListener('input', function() { document.getElementById('rateValue').textContent = this.value + 'x'; });
-            document.getElementById('pitchSlider').addEventListener('input', function() { document.getElementById('pitchValue').textContent = this.value; });
+            document.getElementById('rateSlider').addEventListener('input', function() { 
+                document.getElementById('rateValue').textContent = this.value + 'x';
+                saveCache();
+            });
+            document.getElementById('pitchSlider').addEventListener('input', function() { 
+                document.getElementById('pitchValue').textContent = this.value;
+                saveCache();
+            });
         });
         
         function loadVoices() {
@@ -308,11 +319,125 @@
             }
         }
         
+        // ========== 缓存功能 ==========
+        function saveCache() {
+            if (files.length === 0) return;
+            
+            const cacheData = {
+                files: files.map(f => ({
+                    name: f.name,
+                    content: null // 内容太大，单独存储
+                })),
+                currentFileIndex: currentFileIndex,
+                currentParagraphIndex: currentParagraphIndex,
+                rate: document.getElementById('rateSlider').value,
+                pitch: document.getElementById('pitchSlider').value,
+                currentContent: currentContent,
+                timestamp: Date.now()
+            };
+            
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+            } catch(e) {
+                console.log('缓存保存失败', e);
+            }
+        }
+        
+        function loadCache() {
+            try {
+                const saved = localStorage.getItem(CACHE_KEY);
+                if (saved) {
+                    cachedData = JSON.parse(saved);
+                    
+                    // 恢复语速和音调
+                    if (cachedData.rate) {
+                        document.getElementById('rateSlider').value = cachedData.rate;
+                        document.getElementById('rateValue').textContent = cachedData.rate + 'x';
+                    }
+                    if (cachedData.pitch) {
+                        document.getElementById('pitchSlider').value = cachedData.pitch;
+                        document.getElementById('pitchValue').textContent = cachedData.pitch;
+                    }
+                    
+                    // 显示恢复提示
+                    if (cachedData.files && cachedData.files.length > 0) {
+                        showCachePrompt();
+                    }
+                }
+            } catch(e) {
+                console.log('缓存加载失败', e);
+            }
+        }
+        
+        function showCachePrompt() {
+            const fileList = document.getElementById('fileList');
+            const fileCount = cachedData.files.length;
+            const fileName = cachedData.files[cachedData.currentFileIndex]?.name || '未知';
+            
+            fileList.innerHTML = `
+                <div style="padding: 15px; text-align: center;">
+                    <p style="color: #00ff88; margin-bottom: 10px;">发现上次阅读记录</p>
+                    <p style="color: #aaa; font-size: 0.9rem;">共 ${fileCount} 个文件，上次读到: ${fileName}</p>
+                    <p style="color: #888; font-size: 0.85rem;">进度: 第 ${cachedData.currentParagraphIndex + 1} 段</p>
+                    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="restoreCache()" style="padding: 8px 20px; background: #667eea; border: none; border-radius: 5px; color: white; cursor: pointer;">恢复进度</button>
+                        <button onclick="clearCacheAndHide()" style="padding: 8px 20px; background: #555; border: none; border-radius: 5px; color: white; cursor: pointer;">清除记录</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function restoreCache() {
+            if (!cachedData) return;
+            
+            // 恢复内容
+            if (cachedData.currentContent) {
+                currentContent = cachedData.currentContent;
+                paragraphs = currentContent.split('\n').filter(p => p.trim());
+            }
+            
+            currentFileIndex = cachedData.currentFileIndex;
+            currentParagraphIndex = cachedData.currentParagraphIndex;
+            
+            // 更新文件列表显示
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            cachedData.files.forEach((f, index) => {
+                const div = document.createElement('div');
+                div.className = 'file-item' + (index === currentFileIndex ? ' active' : '');
+                div.innerHTML = `<span class="file-name">${index + 1}. ${f.name}</span>`;
+                div.onclick = () => {
+                    // 用户点击其他文件时，需要重新选择
+                    document.getElementById('statusBar').textContent = '请重新选择文件夹';
+                };
+                fileList.appendChild(div);
+            });
+            
+            // 显示内容
+            displayKaraoke(currentParagraphIndex);
+            updateProgress(currentParagraphIndex + 1, paragraphs.length);
+            document.getElementById('statusBar').textContent = `已恢复: ${cachedData.files[currentFileIndex].name} - 第 ${currentParagraphIndex + 1} 段`;
+        }
+        
+        function clearCacheAndHide() {
+            clearCache();
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('statusBar').textContent = '缓存已清除';
+        }
+        
+        function clearCache() {
+            localStorage.removeItem(CACHE_KEY);
+            cachedData = null;
+        }
+        // ========== 缓存功能结束 ==========
+        
         function handleFileSelect(e) {
             const selected = Array.from(e.target.files).filter(f => f.name.endsWith('.txt'));
             if (selected.length > 0) {
                 files = selected.sort((a, b) => a.name.localeCompare(b.name));
                 updateFileList();
+                // 清除旧缓存，准备新缓存
+                clearCache();
             } else {
                 document.getElementById('statusBar').textContent = '未找到txt文件';
             }
@@ -334,6 +459,7 @@
         
         function selectFile(index) {
             currentFileIndex = index;
+            currentParagraphIndex = 0; // 重置段落索引
             document.querySelectorAll('.file-item').forEach((item, i) => { item.classList.toggle('active', i === index); });
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -342,6 +468,8 @@
                 displayKaraoke(-1);
                 document.getElementById('statusBar').textContent = `当前: ${files[index].name}`;
                 updateProgress(0, paragraphs.length);
+                // 保存缓存
+                saveCache();
             };
             reader.readAsText(files[index], 'UTF-8');
         }
@@ -508,6 +636,7 @@
             
             currentUtterance.onend = function() {
                 currentParagraphIndex++;
+                saveCache(); // 保存进度
                 if (isPlaying && !isPaused) readNextParagraph();
             };
             

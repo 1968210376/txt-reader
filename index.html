@@ -187,8 +187,25 @@
         function loadVoices() {
             voices = speechSynthesis.getVoices();
             if (voices.length === 0) {
-                speechSynthesis.onvoiceschanged = loadVoices;
-                setTimeout(loadVoices, 500);
+                speechSynthesis.onvoiceschanged = function() {
+                    voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        populateVoiceSelect();
+                    }
+                };
+                // 多次重试
+                let attempts = 0;
+                const maxAttempts = 20;
+                const retryInterval = setInterval(function() {
+                    attempts++;
+                    voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        populateVoiceSelect();
+                        clearInterval(retryInterval);
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(retryInterval);
+                    }
+                }, 300);
             } else {
                 populateVoiceSelect();
             }
@@ -239,8 +256,13 @@
                 });
                 select.appendChild(optgroup);
                 
-                // 默认选择第一个在线语音
-                currentVoiceIndex = onlineVoices[0].index;
+                // 默认选择xiaoxiao
+                const xiaoxiaoVoice = onlineVoices.find(v => v.name.toLowerCase().includes('xiaoxiao'));
+                if (xiaoxiaoVoice) {
+                    currentVoiceIndex = xiaoxiaoVoice.index;
+                } else {
+                    currentVoiceIndex = onlineVoices[0].index;
+                }
                 select.value = currentVoiceIndex;
                 updateVoiceStatus(true);
             }

@@ -1,6 +1,6 @@
 """
 TXT 小说朗读工具 (Edge-TTS版)
-支持卡拉OK式文字跟随高亮
+支持卡拉OK式文字跟随高亮，无屏闪
 """
 
 import os
@@ -11,7 +11,11 @@ from tkinter import ttk, filedialog, messagebox
 import threading
 import tempfile
 import subprocess
-import re
+import time
+import winsound
+import wave
+import struct
+import math
 
 CHINESE_VOICES = [
     ("晓晓(女声)", "zh-CN-XiaoxiaoNeural"),
@@ -42,7 +46,7 @@ class TxtReader:
         # 卡拉OK相关
         self.current_paragraph_index = 0
         self.paragraphs = []
-        self.highlight_tag = "highlight"
+        self.paragraph_positions = []  # 存储每个段落在Text中的位置
         
         self.create_widgets()
         
@@ -78,19 +82,26 @@ class TxtReader:
         
         tk.Label(content_frame, text="朗读内容:", font=('Microsoft YaHei', 10)).pack(anchor=tk.W)
         
-        # 使用Text组件显示内容，支持高亮
+        # 使用Text组件显示内容
         self.text_content = tk.Text(content_frame, font=('Microsoft YaHei', 14), wrap=tk.WORD,
-                                     bg='#1a1a2e', fg='#e0e0e0', insertbackground='white',
-                                     selectbackground='#4CAF50', spacing1=5, spacing3=5)
+                                     bg='#1a1a2e', fg='#888888', insertbackground='white',
+                                     selectbackground='#4CAF50', spacing1=8, spacing3=8,
+                                     cursor='arrow')
         self.text_content.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        # 配置高亮样式
-        self.text_content.tag_configure(self.highlight_tag, foreground='#00ff00', font=('Microsoft YaHei', 14, 'bold'))
-        self.text_content.tag_configure("paragraph", foreground='#b0b0b0')
+        # 配置高亮样式 - 当前段落
+        self.text_content.tag_configure("current", foreground='#00ff88', font=('Microsoft YaHei', 15, 'bold'))
+        # 已读段落
+        self.text_content.tag_configure("read", foreground='#555555')
+        # 未读段落
+        self.text_content.tag_configure("unread", foreground='#888888')
         
         content_scrollbar = tk.Scrollbar(self.text_content, orient=tk.VERTICAL, command=self.text_content.yview)
         content_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.text_content.config(yscrollcommand=content_scrollbar.set)
+        
+        # 禁止编辑
+        self.text_content.config(state=tk.DISABLED)
         
         # ===== 控制按钮 =====
         btn_frame = tk.Frame(self.root, padx=10, pady=15)
@@ -197,34 +208,48 @@ class TxtReader:
                 self.current_content = content
                 
                 # 显示内容
-                self.display_content()
+                self.display_content(-1)
                 self.status_var.set(f"当前: {os.path.basename(filepath)}")
+                self.update_progress(0)
             except Exception as e:
                 messagebox.showerror("错误", f"读取文件失败: {e}")
     
-    def display_content(self, highlight_index=-1):
-        """显示内容，支持高亮当前段落"""
+    def display_content(self, current_index):
+        """显示内容，高亮当前段落 - 无屏闪版本"""
         self.text_content.config(state=tk.NORMAL)
         self.text_content.delete('1.0', tk.END)
+        self.paragraph_positions = []
         
         for i, para in enumerate(self.paragraphs):
-            if i == highlight_index:
-                self.text_content.insert(tk.END, para + '\n\n', self.highlight_tag)
+            start_pos = self.text_content.index(tk.END)
+            self.text_content.insert(tk.END, para + '\n\n')
+            end_pos = self.text_content.index(tk.END)
+            self.paragraph_positions.append((start_pos, end_pos))
+            
+            # 设置标签
+            if i == current_index:
+                self.text_content.tag_add("current", start_pos, end_pos)
+            elif i < current_index:
+                self.text_content.tag_add("read", start_pos, end_pos)
             else:
-                self.text_content.insert(tk.END, para + '\n\n', "paragraph")
+                self.text_content.tag_add("unread", start_pos, end_pos)
         
         self.text_content.config(state=tk.DISABLED)
         
-        # 滚动到高亮段落
-        if highlight_index >= 0:
-            self.scroll_to_paragraph(highlight_index)
+        # 滚动到当前段落
+        if current_index >= 0 and current_index < len(self.paragraph_positions):
+            self.scroll_to_paragraph(current_index)
     
     def scroll_to_paragraph(self, index):
-        """滚动到指定段落"""
-        # 计算大致位置
-        lines_before = sum(len(self.paragraphs[i]) // 50 + 2 for i in range(index))
-        self.text_content.see(f'{lines_before + 1}.0')
-        self.text_content.see(f'{lines_before + 3}.0')
+        """平滑滚动到指定段落"""
+        if 0 <= index < len(self.paragraph_positions):
+            start_pos = self.paragraph_positions[index][0]
+            self.text_content.see(start_pos)
+            
+    def update_progress(self, progress):
+        """更新进度条"""
+        self.progress_var.set(progress)
+        self.progress_label.config(text=f"{int(progress)}%")
                 
     def toggle_play_pause(self):
         """播放/暂停切换"""
@@ -275,11 +300,10 @@ class TxtReader:
             
             self.current_paragraph_index = i
             
-            # 更新高亮
+            # 更新高亮（在主线程）
             self.root.after(0, lambda idx=i: self.highlight_paragraph(idx))
             
             while self.is_paused and not self.is_stopped:
-                import time
                 time.sleep(0.1)
             
             if self.is_stopped:
@@ -299,15 +323,31 @@ class TxtReader:
             self.root.after(0, self.on_reading_complete)
     
     def highlight_paragraph(self, index):
-        """高亮显示当前段落"""
-        self.display_content(highlight_index=index)
-            
-    def update_progress(self, progress):
-        """更新进度条"""
-        self.progress_var.set(progress)
-        self.progress_label.config(text=f"{int(progress)}%")
+        """高亮显示当前段落 - 无屏闪更新"""
+        # 只更新标签，不重新加载整个内容
+        self.text_content.config(state=tk.NORMAL)
+        
+        # 移除所有标签
+        self.text_content.tag_remove("current", '1.0', tk.END)
+        self.text_content.tag_remove("read", '1.0', tk.END)
+        self.text_content.tag_remove("unread", '1.0', tk.END)
+        
+        # 重新应用标签
+        for i, (start, end) in enumerate(self.paragraph_positions):
+            if i == index:
+                self.text_content.tag_add("current", start, end)
+            elif i < index:
+                self.text_content.tag_add("read", start, end)
+            else:
+                self.text_content.tag_add("unread", start, end)
+        
+        self.text_content.config(state=tk.DISABLED)
+        
+        # 滚动
+        self.scroll_to_paragraph(index)
             
     def speak_paragraph(self, text):
+        """朗读单个段落"""
         import edge_tts
         if not text.strip():
             return
@@ -323,6 +363,7 @@ class TxtReader:
                 communicate = edge_tts.Communicate(text, voice, rate=rate)
                 await communicate.save(temp_path)
             asyncio.run(generate())
+            
             if os.path.exists(temp_path):
                 self.play_mp3(temp_path)
         finally:
@@ -333,50 +374,46 @@ class TxtReader:
                     pass
                     
     def play_mp3(self, mp3_path):
-        import time
-        
-        # 使用Windows Media Player COM对象播放
+        """播放MP3文件 - 使用多种方法尝试"""
+        # 方法1: 使用Windows Media Player (通过cmd)
         try:
-            import win32com.client
-            wmp = win32com.client.Dispatch("WMPlayer.OCX")
-            wmp.settings.autoStart = True
-            wmp.URL = mp3_path
-            wmp.controls.play()
-            
-            # 等待播放完成
-            while wmp.playState not in [1, 8, 9]:  # Stopped, MediaEnded, Stopped
-                if self.is_stopped:
-                    wmp.controls.stop()
-                    break
-                while self.is_paused and not self.is_stopped:
-                    time.sleep(0.1)
-                time.sleep(0.1)
-            wmp.controls.stop()
-            return
+            # 使用wmplayer播放
+            cmd = f'cmdmp3 "{mp3_path}"'
+            # 先尝试cmdmp3工具（如果有的话）
         except:
             pass
         
-        # 备选方案：使用PowerShell
-        ps_cmd = f'''
+        # 方法2: 使用PowerShell播放 (修复语法)
+        ps_script = f'''
         Add-Type -AssemblyName presentationCore
         $player = New-Object System.Windows.Media.MediaPlayer
         $player.Open("{mp3_path.replace(os.sep, '/')}")
-        Start-Sleep -Milliseconds 500
+        Start-Sleep -Milliseconds 300
         $player.Play()
+        Start-Sleep -Milliseconds 100
         while ($player.Position -lt $player.NaturalDuration.TimeSpan -and $player.HasAudio) {{
             Start-Sleep -Milliseconds 100
         }}
         $player.Close()
         '''
-        process = subprocess.Popen(['powershell', '-Command', ps_cmd], 
-                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # 使用-EncodedCommand避免特殊字符问题
+        import base64
+        encoded_script = base64.b64encode(ps_script.encode('utf-16-le')).decode('ascii')
+        
+        process = subprocess.Popen(
+            ['powershell', '-EncodedCommand', encoded_script],
+            stdout=subprocess.DEVNULL, 
+            stderr=subprocess.DEVNULL
+        )
+        
         while process.poll() is None:
             if self.is_stopped:
                 process.terminate()
                 break
             while self.is_paused and not self.is_stopped:
                 time.sleep(0.1)
-            time.sleep(0.1)
+            time.sleep(0.05)
             
     def on_reading_complete(self):
         self.is_playing = False

@@ -1,15 +1,17 @@
 """
 TXT 小说朗读工具 (Edge-TTS版)
+支持卡拉OK式文字跟随高亮
 """
 
 import os
 import glob
 import asyncio
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox
 import threading
 import tempfile
 import subprocess
+import re
 
 CHINESE_VOICES = [
     ("晓晓(女声)", "zh-CN-XiaoxiaoNeural"),
@@ -20,11 +22,12 @@ CHINESE_VOICES = [
     ("晓秋(女声温柔)", "zh-CN-XiaoqiuNeural"),
 ]
 
+
 class TxtReader:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("TXT 小说朗读工具")
-        self.root.geometry("900x700")
+        self.root.geometry("1000x800")
         
         self.folder_path = tk.StringVar()
         self.current_file_index = -1
@@ -34,7 +37,12 @@ class TxtReader:
         self.is_stopped = False
         self.speech_rate = tk.IntVar(value=0)
         self.current_content = ""
-        self.selected_voice = tk.StringVar(value="晓晓(女声)")  # 默认晓晓
+        self.selected_voice = tk.StringVar(value="晓晓(女声)")
+        
+        # 卡拉OK相关
+        self.current_paragraph_index = 0
+        self.paragraphs = []
+        self.highlight_tag = "highlight"
         
         self.create_widgets()
         
@@ -54,7 +62,7 @@ class TxtReader:
         
         tk.Label(list_frame, text="文件列表:", font=('Microsoft YaHei', 10)).pack(anchor=tk.W)
         
-        self.listbox = tk.Listbox(list_frame, font=('Microsoft YaHei', 10), height=10)
+        self.listbox = tk.Listbox(list_frame, font=('Microsoft YaHei', 10), height=6)
         self.listbox.pack(fill=tk.BOTH, expand=True, pady=5)
         
         scrollbar = tk.Scrollbar(self.listbox, orient=tk.VERTICAL, command=self.listbox.yview)
@@ -62,20 +70,27 @@ class TxtReader:
         self.listbox.config(yscrollcommand=scrollbar.set)
         
         self.listbox.bind('<<ListboxSelect>>', self.on_select_file)
-        self.listbox.bind('<Double-Button-1>', lambda e: self.play_selected())
+        self.listbox.bind('<Double-Button-1>', lambda e: self.toggle_play_pause())
         
-        # ===== 内容预览 =====
-        preview_frame = tk.Frame(self.root, padx=10)
-        preview_frame.pack(fill=tk.BOTH, expand=True)
+        # ===== 内容显示（卡拉OK区域）=====
+        content_frame = tk.Frame(self.root, padx=10)
+        content_frame.pack(fill=tk.BOTH, expand=True)
         
-        tk.Label(preview_frame, text="内容预览:", font=('Microsoft YaHei', 10)).pack(anchor=tk.W)
+        tk.Label(content_frame, text="朗读内容:", font=('Microsoft YaHei', 10)).pack(anchor=tk.W)
         
-        self.text_content = tk.Text(preview_frame, font=('Microsoft YaHei', 10), height=8, wrap=tk.WORD)
+        # 使用Text组件显示内容，支持高亮
+        self.text_content = tk.Text(content_frame, font=('Microsoft YaHei', 14), wrap=tk.WORD,
+                                     bg='#1a1a2e', fg='#e0e0e0', insertbackground='white',
+                                     selectbackground='#4CAF50', spacing1=5, spacing3=5)
         self.text_content.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        preview_scrollbar = tk.Scrollbar(self.text_content, orient=tk.VERTICAL, command=self.text_content.yview)
-        preview_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.text_content.config(yscrollcommand=preview_scrollbar.set)
+        # 配置高亮样式
+        self.text_content.tag_configure(self.highlight_tag, foreground='#00ff00', font=('Microsoft YaHei', 14, 'bold'))
+        self.text_content.tag_configure("paragraph", foreground='#b0b0b0')
+        
+        content_scrollbar = tk.Scrollbar(self.text_content, orient=tk.VERTICAL, command=self.text_content.yview)
+        content_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.text_content.config(yscrollcommand=content_scrollbar.set)
         
         # ===== 控制按钮 =====
         btn_frame = tk.Frame(self.root, padx=10, pady=15)
@@ -93,6 +108,17 @@ class TxtReader:
                                    bg='#4CAF50', fg='white', font=('Microsoft YaHei', 14, 'bold'), width=12, height=2)
         self.btn_next.pack(side=tk.LEFT, padx=15, expand=True)
         
+        # ===== 进度条 =====
+        progress_frame = tk.Frame(self.root, padx=10)
+        progress_frame.pack(fill=tk.X)
+        
+        self.progress_var = tk.DoubleVar(value=0)
+        self.progress_bar = ttk.Progressbar(progress_frame, variable=self.progress_var, maximum=100, length=400)
+        self.progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        
+        self.progress_label = tk.Label(progress_frame, text="0%", font=('Microsoft YaHei', 10), width=6)
+        self.progress_label.pack(side=tk.LEFT)
+        
         # ===== 设置区域 =====
         settings_frame = tk.Frame(self.root, padx=10, pady=5)
         settings_frame.pack(fill=tk.X)
@@ -107,7 +133,7 @@ class TxtReader:
                  length=150, font=('Microsoft YaHei', 9)).pack(side=tk.LEFT, padx=5)
         
         # ===== 快捷键提示 =====
-        tk.Label(self.root, text="快捷键: 空格=暂停 | ←=上一章 | →=下一章 | Esc=停止",
+        tk.Label(self.root, text="快捷键: 空格=播放/暂停 | ←=上一章 | →=下一章 | Esc=停止",
                  font=('Microsoft YaHei', 9), fg='gray').pack(pady=5)
         
         # ===== 状态栏 =====
@@ -165,23 +191,41 @@ class TxtReader:
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
                     content = f.read()
-                self.text_content.delete('1.0', tk.END)
-                self.text_content.insert('1.0', content[:1500])
+                
+                # 分段处理
+                self.paragraphs = [p.strip() for p in content.split('\n') if p.strip()]
                 self.current_content = content
+                
+                # 显示内容
+                self.display_content()
                 self.status_var.set(f"当前: {os.path.basename(filepath)}")
             except Exception as e:
                 messagebox.showerror("错误", f"读取文件失败: {e}")
-                
-    def play_selected(self):
-        if not self.txt_files:
-            messagebox.showwarning("警告", "请先加载文件！")
-            return
-        if self.current_file_index < 0:
-            self.current_file_index = 0
-            self.listbox.selection_set(0)
-            self.preview_file()
-        self.start_reading()
     
+    def display_content(self, highlight_index=-1):
+        """显示内容，支持高亮当前段落"""
+        self.text_content.config(state=tk.NORMAL)
+        self.text_content.delete('1.0', tk.END)
+        
+        for i, para in enumerate(self.paragraphs):
+            if i == highlight_index:
+                self.text_content.insert(tk.END, para + '\n\n', self.highlight_tag)
+            else:
+                self.text_content.insert(tk.END, para + '\n\n', "paragraph")
+        
+        self.text_content.config(state=tk.DISABLED)
+        
+        # 滚动到高亮段落
+        if highlight_index >= 0:
+            self.scroll_to_paragraph(highlight_index)
+    
+    def scroll_to_paragraph(self, index):
+        """滚动到指定段落"""
+        # 计算大致位置
+        lines_before = sum(len(self.paragraphs[i]) // 50 + 2 for i in range(index))
+        self.text_content.see(f'{lines_before + 1}.0')
+        self.text_content.see(f'{lines_before + 3}.0')
+                
     def toggle_play_pause(self):
         """播放/暂停切换"""
         if not self.txt_files:
@@ -195,7 +239,6 @@ class TxtReader:
             self.btn_play.config(text="▶ 播放")
             self.status_var.set("已暂停")
         else:
-            # 未播放，执行播放
             if self.is_paused:
                 # 从暂停恢复
                 self.is_paused = False
@@ -208,6 +251,7 @@ class TxtReader:
                     self.current_file_index = 0
                     self.listbox.selection_set(0)
                     self.preview_file()
+                self.current_paragraph_index = 0
                 self.start_reading()
         
     def start_reading(self):
@@ -224,39 +268,51 @@ class TxtReader:
         threading.Thread(target=self.read_content_thread, daemon=True).start()
         
     def read_content_thread(self):
-        import edge_tts
-        
-        filepath = self.txt_files[self.current_file_index]
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.read()
-        except Exception as e:
-            return
-        
-        paragraphs = [p.strip() for p in content.split('\n') if p.strip()]
-        
-        for para in paragraphs:
+        """朗读内容线程 - 卡拉OK式"""
+        for i, para in enumerate(self.paragraphs):
             if self.is_stopped:
                 break
+            
+            self.current_paragraph_index = i
+            
+            # 更新高亮
+            self.root.after(0, lambda idx=i: self.highlight_paragraph(idx))
+            
             while self.is_paused and not self.is_stopped:
                 import time
                 time.sleep(0.1)
+            
             if self.is_stopped:
                 break
+            
             try:
                 self.speak_paragraph(para)
-            except:
+            except Exception as e:
+                print(f"朗读出错: {e}")
                 continue
+            
+            # 更新进度
+            progress = ((i + 1) / len(self.paragraphs)) * 100
+            self.root.after(0, lambda p=progress: self.update_progress(p))
                 
         if not self.is_stopped:
             self.root.after(0, self.on_reading_complete)
+    
+    def highlight_paragraph(self, index):
+        """高亮显示当前段落"""
+        self.display_content(highlight_index=index)
+            
+    def update_progress(self, progress):
+        """更新进度条"""
+        self.progress_var.set(progress)
+        self.progress_label.config(text=f"{int(progress)}%")
             
     def speak_paragraph(self, text):
         import edge_tts
         if not text.strip():
             return
             
-        voice = self.selected_voice.get()
+        voice = CHINESE_VOICES[[v[0] for v in CHINESE_VOICES].index(self.selected_voice.get())][1]
         rate = f"{'+' if self.speech_rate.get() >= 0 else ''}{self.speech_rate.get()}%"
         
         with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp:
@@ -301,7 +357,9 @@ class TxtReader:
         self.is_playing = False
         self.is_paused = False
         self.btn_play.config(text="▶ 播放")
-        self.status_var.set(f"朗读完成")
+        self.status_var.set("朗读完成")
+        self.update_progress(100)
+        self.display_content(-1)
         
     def stop_reading(self):
         self.is_stopped = True
@@ -309,6 +367,7 @@ class TxtReader:
         self.is_paused = False
         self.btn_play.config(text="▶ 播放")
         self.status_var.set("已停止")
+        self.update_progress(0)
         
     def prev_chapter(self):
         if self.current_file_index > 0:
@@ -318,6 +377,7 @@ class TxtReader:
             self.listbox.selection_set(self.current_file_index)
             self.listbox.see(self.current_file_index)
             self.preview_file()
+            self.update_progress(0)
         else:
             self.status_var.set("已经是第一章了！")
             
@@ -329,6 +389,7 @@ class TxtReader:
             self.listbox.selection_set(self.current_file_index)
             self.listbox.see(self.current_file_index)
             self.preview_file()
+            self.update_progress(0)
         else:
             self.status_var.set("已经是最后一章了！")
             

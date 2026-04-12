@@ -20,7 +20,6 @@ CHINESE_VOICES = [
     ("晓秋(女声温柔)", "zh-CN-XiaoqiuNeural"),
 ]
 
-
 class TxtReader:
     def __init__(self):
         self.root = tk.Tk()
@@ -35,7 +34,7 @@ class TxtReader:
         self.is_stopped = False
         self.speech_rate = tk.IntVar(value=0)
         self.current_content = ""
-        self.selected_voice = tk.StringVar(value=CHINESE_VOICES[0][1])
+        self.selected_voice = tk.StringVar(value="晓晓(女声)")  # 默认晓晓
         
         self.create_widgets()
         
@@ -111,7 +110,6 @@ class TxtReader:
         self.voice_combo = tk.OptionMenu(settings_frame, self.selected_voice, *voice_options, command=self.change_voice)
         self.voice_combo.config(font=('Microsoft YaHei', 10))
         self.voice_combo.pack(side=tk.LEFT, padx=10)
-        
         tk.Label(settings_frame, text="语速:", font=('Microsoft YaHei', 10)).pack(side=tk.LEFT, padx=(20, 0))
         tk.Scale(settings_frame, from_=-50, to=50, orient=tk.HORIZONTAL, variable=self.speech_rate, 
                  length=150, font=('Microsoft YaHei', 9)).pack(side=tk.LEFT, padx=5)

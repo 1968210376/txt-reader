@@ -373,11 +373,20 @@
                 return;
             }
             
-            // 中文语音优先
+            let xiaoxiaoIndex = -1;
+            
+            // 中文语音优先，晓晓排在最前
             voices.forEach((voice, i) => {
                 const option = document.createElement('option');
                 option.value = i;
                 const lang = voice.lang.toLowerCase();
+                const name = voice.name.toLowerCase();
+                
+                // 检测晓晓语音
+                if (name.includes('xiaoxiao') || name.includes('晓晓')) {
+                    xiaoxiaoIndex = i;
+                }
+                
                 if (lang.includes('zh') || lang.includes('cn')) {
                     option.textContent = '★ ' + voice.name + (voice.localService ? '' : ' [在线]');
                     select.insertBefore(option, select.firstChild);
@@ -386,6 +395,11 @@
                     select.appendChild(option);
                 }
             });
+            
+            // 默认选择晓晓
+            if (xiaoxiaoIndex >= 0) {
+                select.value = xiaoxiaoIndex;
+            }
         }
         
         function handleFolderSelect(e) {

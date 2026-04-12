@@ -177,7 +177,27 @@
         ];
         
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始加载语音
             loadVoices();
+            
+            // 多次尝试加载语音（解决移动端加载延迟问题）
+            let retryCount = 0;
+            const retryInterval = setInterval(function() {
+                if (voices.length > 0 || retryCount >= 10) {
+                    clearInterval(retryInterval);
+                } else {
+                    loadVoices();
+                    retryCount++;
+                }
+            }, 500);
+            
+            // 用户交互时也尝试加载语音
+            document.body.addEventListener('click', function() {
+                if (voices.length === 0) {
+                    loadVoices();
+                }
+            }, { once: false });
+            
             document.getElementById('folderInput').addEventListener('change', handleFileSelect);
             document.getElementById('fileInput').addEventListener('change', handleFileSelect);
             document.getElementById('rateSlider').addEventListener('input', function() { document.getElementById('rateValue').textContent = this.value + 'x'; });
@@ -187,8 +207,12 @@
         function loadVoices() {
             voices = speechSynthesis.getVoices();
             if (voices.length === 0) {
-                speechSynthesis.onvoiceschanged = loadVoices;
-                setTimeout(loadVoices, 500);
+                speechSynthesis.onvoiceschanged = function() {
+                    voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        populateVoiceSelect();
+                    }
+                };
             } else {
                 populateVoiceSelect();
             }
@@ -199,7 +223,7 @@
             select.innerHTML = '';
             
             if (voices.length === 0) {
-                select.innerHTML = '<option value="">未检测到语音</option>';
+                select.innerHTML = '<option value="">加载语音中...</option>';
                 return;
             }
             

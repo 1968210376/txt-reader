@@ -181,7 +181,22 @@
             voices = speechSynthesis.getVoices();
             if (voices.length === 0) {
                 speechSynthesis.onvoiceschanged = loadVoices;
-                setTimeout(loadVoices, 500);
+                // 多次重试加载语音
+                let retryCount = 0;
+                const maxRetry = 10;
+                const retryInterval = setInterval(function() {
+                    retryCount++;
+                    voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        populateVoiceSelect();
+                        clearInterval(retryInterval);
+                    } else if (retryCount >= maxRetry) {
+                        // 显示提示，但允许继续使用
+                        const select = document.getElementById('voiceSelect');
+                        select.innerHTML = '<option value="-1">默认语音 (点击播放后可用)</option>';
+                        clearInterval(retryInterval);
+                    }
+                }, 500);
             } else {
                 populateVoiceSelect();
             }

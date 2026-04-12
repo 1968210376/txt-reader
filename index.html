@@ -8,72 +8,79 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; padding: 10px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh; padding: 10px; color: #e0e0e0;
         }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { text-align: center; color: white; margin-bottom: 15px; font-size: 1.5rem; }
-        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .card-title { font-size: 1rem; color: #333; margin-bottom: 10px; font-weight: 600; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; color: #667eea; margin-bottom: 15px; font-size: 1.5rem; text-shadow: 0 0 10px rgba(102,126,234,0.5); }
+        .card { background: #1e1e30; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #333; }
+        .card-title { font-size: 1rem; color: #888; margin-bottom: 10px; font-weight: 600; }
         
         .file-btn-group { display: flex; gap: 10px; }
         .file-btn {
-            flex: 1;
-            padding: 12px;
+            flex: 1; padding: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
+            color: white; border: none; border-radius: 10px;
+            font-size: 1rem; cursor: pointer;
         }
         .file-btn:active { transform: scale(0.98); }
         input[type="file"] { display: none; }
         
-        .file-list { max-height: 180px; overflow-y: auto; border: 1px solid #ddd; border-radius: 10px; margin-top: 10px; }
-        .file-item { padding: 10px 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .file-list { max-height: 150px; overflow-y: auto; border: 1px solid #333; border-radius: 10px; margin-top: 10px; }
+        .file-item { padding: 10px 15px; border-bottom: 1px solid #333; cursor: pointer; color: #aaa; }
         .file-item:last-child { border-bottom: none; }
-        .file-item:active { background: #f5f5f5; }
-        .file-item.active { background: #667eea20; border-left: 3px solid #667eea; }
+        .file-item:active { background: #2a2a40; }
+        .file-item.active { background: #667eea30; border-left: 3px solid #667eea; color: #fff; }
         .file-name { font-size: 0.95rem; }
         
-        .content-preview {
-            max-height: 180px; overflow-y: auto;
-            background: #f9f9f9; border-radius: 10px; padding: 15px;
-            font-size: 0.95rem; line-height: 1.6;
-            white-space: pre-wrap; word-wrap: break-word;
+        /* 卡拉OK内容区域 */
+        .karaoke-container {
+            background: #0d0d1a; border-radius: 10px; padding: 20px;
+            min-height: 300px; max-height: 400px; overflow-y: auto;
+        }
+        .karaoke-paragraph {
+            padding: 12px 0; margin: 8px 0;
+            font-size: 1.1rem; line-height: 1.8;
+            color: #666; border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .karaoke-paragraph.active {
+            color: #00ff88; font-size: 1.2rem;
+            background: linear-gradient(90deg, #667eea20, #00ff8820);
+            padding: 15px; margin: 12px 0;
+            box-shadow: 0 0 20px rgba(0,255,136,0.2);
+        }
+        .karaoke-paragraph.read {
+            color: #555;
         }
         
         .control-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .ctrl-btn {
-            padding: 18px 10px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
+            padding: 18px 10px; border: none; border-radius: 12px;
+            font-size: 1rem; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
         }
         .ctrl-btn .icon { font-size: 1.8rem; }
         .btn-prev, .btn-next { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; }
         .btn-play { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; }
         
-        .progress-bar { height: 4px; background: #ddd; border-radius: 2px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); width: 0%; }
+        .progress-container { margin-bottom: 15px; }
+        .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #00ff88 100%); width: 0%; transition: width 0.3s; }
+        .progress-text { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.85rem; color: #888; }
         
         .settings { display: flex; flex-wrap: wrap; gap: 15px; }
         .setting-group { flex: 1; min-width: 130px; }
-        .setting-label { font-size: 0.9rem; color: #666; margin-bottom: 5px; }
-        select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        input[type="range"] { width: 100%; height: 8px; border-radius: 4px; background: #ddd; outline: none; -webkit-appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #667eea; cursor: pointer; }
+        .setting-label { font-size: 0.9rem; color: #888; margin-bottom: 5px; }
+        select { width: 100%; padding: 10px; border: 1px solid #333; border-radius: 8px; font-size: 1rem; background: #2a2a40; color: #fff; }
+        input[type="range"] { width: 100%; height: 8px; border-radius: 4px; background: #333; outline: none; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #667eea; cursor: pointer; }
         
-        .status-bar { background: #f5f5f5; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; color: #666; text-align: center; }
-        .tips { background: #e3f2fd; color: #1565c0; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
+        .status-bar { background: #2a2a40; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; color: #888; text-align: center; }
+        .tips { background: #1e3a5f; color: #7ec8e3; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -92,8 +99,10 @@
         </div>
         
         <div class="card">
-            <div class="card-title">内容预览</div>
-            <div class="content-preview" id="contentPreview">请选择文件...</div>
+            <div class="card-title">朗读内容</div>
+            <div class="karaoke-container" id="karaokeContainer">
+                <div style="color: #555; text-align: center; padding: 50px;">请选择文件开始朗读</div>
+            </div>
         </div>
         
         <div class="card">
@@ -111,7 +120,13 @@
                     <span>下一章</span>
                 </button>
             </div>
-            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-container">
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-text">
+                    <span id="currentPara">第 0/0 段</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
         </div>
         
         <div class="card">
@@ -132,12 +147,13 @@
         </div>
         
         <div class="status-bar" id="statusBar">就绪</div>
-        <div class="tips">提示：电脑端推荐选择文件夹，手机端选择文件。使用Edge浏览器可获得更好的中文语音。</div>
+        <div class="tips">提示：当前朗读段落会以绿色高亮显示。使用Edge浏览器可获得更好的中文语音。</div>
     </div>
 
     <script>
         let files = [], currentFileIndex = -1, currentContent = '', isPlaying = false, isPaused = false;
         let speechSynthesis = window.speechSynthesis, currentUtterance = null, voices = [];
+        let paragraphs = [], currentParagraphIndex = 0;
         
         document.addEventListener('DOMContentLoaded', function() {
             loadVoices();
@@ -204,10 +220,42 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 currentContent = e.target.result;
-                document.getElementById('contentPreview').textContent = currentContent.substring(0, 500);
+                paragraphs = currentContent.split('\n').filter(p => p.trim());
+                displayKaraoke(-1);
                 document.getElementById('statusBar').textContent = `当前: ${files[index].name}`;
+                updateProgress(0, 0);
             };
             reader.readAsText(files[index], 'UTF-8');
+        }
+        
+        function displayKaraoke(highlightIndex) {
+            const container = document.getElementById('karaokeContainer');
+            container.innerHTML = '';
+            paragraphs.forEach((para, i) => {
+                const div = document.createElement('div');
+                div.className = 'karaoke-paragraph';
+                if (i === highlightIndex) {
+                    div.classList.add('active');
+                } else if (i < highlightIndex) {
+                    div.classList.add('read');
+                }
+                div.textContent = para.trim();
+                div.id = `para-${i}`;
+                container.appendChild(div);
+            });
+            
+            // 滚动到当前段落
+            if (highlightIndex >= 0) {
+                const activeEl = document.getElementById(`para-${highlightIndex}`);
+                if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        
+        function updateProgress(current, total) {
+            const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('currentPara').textContent = `第 ${current}/${total} 段`;
+            document.getElementById('progressPercent').textContent = percent + '%';
         }
         
         function togglePlayPause() {
@@ -223,38 +271,83 @@
                 document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
             } else {
                 if (currentFileIndex < 0 && files.length > 0) selectFile(0);
+                currentParagraphIndex = 0;
                 startReading();
             }
         }
         
         function startReading() {
-            if (!currentContent) { document.getElementById('statusBar').textContent = '请先选择文件'; return; }
+            if (!paragraphs.length) { document.getElementById('statusBar').textContent = '请先选择文件'; return; }
             speechSynthesis.cancel();
             if (voices.length === 0) voices = speechSynthesis.getVoices();
             isPlaying = true; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
             document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
-            currentUtterance = new SpeechSynthesisUtterance(currentContent);
+            
+            readNextParagraph();
+        }
+        
+        function readNextParagraph() {
+            if (!isPlaying || currentParagraphIndex >= paragraphs.length) {
+                if (currentParagraphIndex >= paragraphs.length) {
+                    onReadingComplete();
+                }
+                return;
+            }
+            
+            if (isPaused) return;
+            
+            const para = paragraphs[currentParagraphIndex];
+            
+            // 高亮当前段落
+            displayKaraoke(currentParagraphIndex);
+            updateProgress(currentParagraphIndex + 1, paragraphs.length);
+            
+            currentUtterance = new SpeechSynthesisUtterance(para);
             const voiceIndex = document.getElementById('voiceSelect').value;
             if (voiceIndex && voices[voiceIndex]) currentUtterance.voice = voices[voiceIndex];
             currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
             currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
+            
             currentUtterance.onend = function() {
-                isPlaying = false; isPaused = false;
-                document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
-                document.getElementById('statusBar').textContent = '朗读完成';
+                currentParagraphIndex++;
+                if (isPlaying && !isPaused) {
+                    readNextParagraph();
+                }
             };
-            currentUtterance.onerror = function(e) { document.getElementById('statusBar').textContent = '朗读出错'; };
+            currentUtterance.onerror = function(e) { 
+                currentParagraphIndex++;
+                if (isPlaying && !isPaused) readNextParagraph();
+            };
+            
             speechSynthesis.speak(currentUtterance);
         }
         
+        function onReadingComplete() {
+            isPlaying = false; isPaused = false;
+            document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
+            document.getElementById('statusBar').textContent = '朗读完成';
+            displayKaraoke(-1);
+            updateProgress(paragraphs.length, paragraphs.length);
+        }
+        
         function prevChapter() {
-            if (currentFileIndex > 0) { selectFile(currentFileIndex - 1); }
+            if (currentFileIndex > 0) { 
+                speechSynthesis.cancel();
+                isPlaying = false; isPaused = false;
+                document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
+                selectFile(currentFileIndex - 1); 
+            }
             else { document.getElementById('statusBar').textContent = '已经是第一章了'; }
         }
         
         function nextChapter() {
-            if (currentFileIndex < files.length - 1) { selectFile(currentFileIndex + 1); }
+            if (currentFileIndex < files.length - 1) { 
+                speechSynthesis.cancel();
+                isPlaying = false; isPaused = false;
+                document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
+                selectFile(currentFileIndex + 1); 
+            }
             else { document.getElementById('statusBar').textContent = '已经是最后一章了'; }
         }
     </script>

@@ -334,17 +334,42 @@ class TxtReader:
                     
     def play_mp3(self, mp3_path):
         import time
+        
+        # 使用Windows Media Player COM对象播放
+        try:
+            import win32com.client
+            wmp = win32com.client.Dispatch("WMPlayer.OCX")
+            wmp.settings.autoStart = True
+            wmp.URL = mp3_path
+            wmp.controls.play()
+            
+            # 等待播放完成
+            while wmp.playState not in [1, 8, 9]:  # Stopped, MediaEnded, Stopped
+                if self.is_stopped:
+                    wmp.controls.stop()
+                    break
+                while self.is_paused and not self.is_stopped:
+                    time.sleep(0.1)
+                time.sleep(0.1)
+            wmp.controls.stop()
+            return
+        except:
+            pass
+        
+        # 备选方案：使用PowerShell
         ps_cmd = f'''
         Add-Type -AssemblyName presentationCore
         $player = New-Object System.Windows.Media.MediaPlayer
         $player.Open("{mp3_path.replace(os.sep, '/')}")
+        Start-Sleep -Milliseconds 500
         $player.Play()
         while ($player.Position -lt $player.NaturalDuration.TimeSpan -and $player.HasAudio) {{
             Start-Sleep -Milliseconds 100
         }}
         $player.Close()
         '''
-        process = subprocess.Popen(['powershell', '-Command', ps_cmd], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        process = subprocess.Popen(['powershell', '-Command', ps_cmd], 
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         while process.poll() is None:
             if self.is_stopped:
                 process.terminate()

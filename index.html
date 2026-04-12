@@ -203,6 +203,10 @@
                         populateVoiceSelect();
                         clearInterval(retryInterval);
                     } else if (attempts >= maxAttempts) {
+                        // 超时后显示默认选项
+                        const select = document.getElementById('voiceSelect');
+                        select.innerHTML = '<option value="-1">默认语音</option>';
+                        currentVoiceIndex = -1;
                         clearInterval(retryInterval);
                     }
                 }, 300);
@@ -216,7 +220,8 @@
             select.innerHTML = '';
             
             if (voices.length === 0) {
-                select.innerHTML = '<option value="">未检测到语音</option>';
+                select.innerHTML = '<option value="-1">默认语音</option>';
+                currentVoiceIndex = -1;
                 return;
             }
             
@@ -301,8 +306,10 @@
             
             select.addEventListener('change', function() {
                 currentVoiceIndex = parseInt(this.value);
-                const voice = voices[currentVoiceIndex];
-                updateVoiceStatus(!voice.localService);
+                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
+                    const voice = voices[currentVoiceIndex];
+                    updateVoiceStatus(!voice.localService);
+                }
             });
         }
         

@@ -280,17 +280,9 @@
                     <span class="icon">⏮</span>
                     <span>上一章</span>
                 </button>
-                <button class="ctrl-btn btn-play" id="playBtn" onclick="togglePlay()">
+                <button class="ctrl-btn btn-play" id="playBtn" onclick="togglePlayPause()">
                     <span class="icon">▶</span>
-                    <span>朗读</span>
-                </button>
-                <button class="ctrl-btn btn-pause" onclick="togglePause()">
-                    <span class="icon">⏸</span>
-                    <span>暂停</span>
-                </button>
-                <button class="ctrl-btn btn-stop" onclick="stopReading()">
-                    <span class="icon">⏹</span>
-                    <span>停止</span>
+                    <span>播放</span>
                 </button>
                 <button class="ctrl-btn btn-next" onclick="nextChapter()">
                     <span class="icon">⏭</span>
@@ -450,10 +442,23 @@
             reader.readAsText(files[index], 'UTF-8');
         }
         
-        function togglePlay() {
+        function togglePlayPause() {
             if (isPlaying) {
-                stopReading();
+                // 正在播放，执行暂停
+                isPaused = true;
+                isPlaying = false;
+                speechSynthesis.pause();
+                document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
+                document.getElementById('statusBar').textContent = '已暂停';
+            } else if (isPaused) {
+                // 已暂停，恢复播放
+                isPaused = false;
+                isPlaying = true;
+                speechSynthesis.resume();
+                document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
+                document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
             } else {
+                // 未播放，开始播放
                 if (currentFileIndex < 0 && files.length > 0) selectFile(0);
                 startReading();
             }
@@ -469,7 +474,7 @@
             
             isPlaying = true;
             isPaused = false;
-            document.getElementById('playBtn').innerHTML = '<span class="icon">⏹</span><span>停止</span>';
+            document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
             document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
             
             currentUtterance = new SpeechSynthesisUtterance(currentContent);
@@ -479,11 +484,10 @@
             currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
             
             currentUtterance.onend = function() {
-                if (isPlaying) {
-                    isPlaying = false;
-                    document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>朗读</span>';
-                    document.getElementById('statusBar').textContent = '朗读完成';
-                }
+                isPlaying = false;
+                isPaused = false;
+                document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
+                document.getElementById('statusBar').textContent = '朗读完成';
             };
             currentUtterance.onerror = function(e) {
                 document.getElementById('statusBar').textContent = '朗读出错: ' + e.error;
@@ -492,23 +496,11 @@
             speechSynthesis.speak(currentUtterance);
         }
         
-        function togglePause() {
-            if (!isPlaying) return;
-            isPaused = !isPaused;
-            if (isPaused) {
-                speechSynthesis.pause();
-                document.getElementById('statusBar').textContent = '已暂停';
-            } else {
-                speechSynthesis.resume();
-                document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
-            }
-        }
-        
         function stopReading() {
             isPlaying = false;
             isPaused = false;
             speechSynthesis.cancel();
-            document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>朗读</span>';
+            document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
             document.getElementById('statusBar').textContent = '已停止';
         }
         

@@ -82,24 +82,16 @@ class TxtReader:
         btn_frame.pack(fill=tk.X)
         
         self.btn_prev = tk.Button(btn_frame, text="上一章", command=self.prev_chapter,
-                                   bg='#4CAF50', fg='white', font=('Microsoft YaHei', 12, 'bold'), width=10, height=2)
-        self.btn_prev.pack(side=tk.LEFT, padx=8, expand=True)
+                                   bg='#4CAF50', fg='white', font=('Microsoft YaHei', 14, 'bold'), width=12, height=2)
+        self.btn_prev.pack(side=tk.LEFT, padx=15, expand=True)
         
-        self.btn_play = tk.Button(btn_frame, text="朗读", command=self.play_selected,
-                                   bg='#2196F3', fg='white', font=('Microsoft YaHei', 12, 'bold'), width=10, height=2)
-        self.btn_play.pack(side=tk.LEFT, padx=8, expand=True)
-        
-        self.btn_pause = tk.Button(btn_frame, text="暂停", command=self.toggle_pause,
-                                    bg='#FF9800', fg='white', font=('Microsoft YaHei', 12, 'bold'), width=10, height=2)
-        self.btn_pause.pack(side=tk.LEFT, padx=8, expand=True)
-        
-        self.btn_stop = tk.Button(btn_frame, text="停止", command=self.stop_reading,
-                                   bg='#f44336', fg='white', font=('Microsoft YaHei', 12, 'bold'), width=10, height=2)
-        self.btn_stop.pack(side=tk.LEFT, padx=8, expand=True)
+        self.btn_play = tk.Button(btn_frame, text="▶ 播放", command=self.toggle_play_pause,
+                                   bg='#2196F3', fg='white', font=('Microsoft YaHei', 14, 'bold'), width=12, height=2)
+        self.btn_play.pack(side=tk.LEFT, padx=15, expand=True)
         
         self.btn_next = tk.Button(btn_frame, text="下一章", command=self.next_chapter,
-                                   bg='#4CAF50', fg='white', font=('Microsoft YaHei', 12, 'bold'), width=10, height=2)
-        self.btn_next.pack(side=tk.LEFT, padx=8, expand=True)
+                                   bg='#4CAF50', fg='white', font=('Microsoft YaHei', 14, 'bold'), width=12, height=2)
+        self.btn_next.pack(side=tk.LEFT, padx=15, expand=True)
         
         # ===== 设置区域 =====
         settings_frame = tk.Frame(self.root, padx=10, pady=5)
@@ -124,7 +116,7 @@ class TxtReader:
                  bg='#f0f0f0', relief=tk.SUNKEN, padx=10, pady=5).pack(fill=tk.X, padx=10, pady=5)
         
         # 绑定快捷键
-        self.root.bind('<space>', lambda e: self.toggle_pause())
+        self.root.bind('<space>', lambda e: self.toggle_play_pause())
         self.root.bind('<Left>', lambda e: self.prev_chapter())
         self.root.bind('<Right>', lambda e: self.next_chapter())
         self.root.bind('<Escape>', lambda e: self.stop_reading())
@@ -189,6 +181,34 @@ class TxtReader:
             self.listbox.selection_set(0)
             self.preview_file()
         self.start_reading()
+    
+    def toggle_play_pause(self):
+        """播放/暂停切换"""
+        if not self.txt_files:
+            messagebox.showwarning("警告", "请先加载文件！")
+            return
+        
+        if self.is_playing:
+            # 正在播放，执行暂停
+            self.is_paused = True
+            self.is_playing = False
+            self.btn_play.config(text="▶ 播放")
+            self.status_var.set("已暂停")
+        else:
+            # 未播放，执行播放
+            if self.is_paused:
+                # 从暂停恢复
+                self.is_paused = False
+                self.is_playing = True
+                self.btn_play.config(text="⏸ 暂停")
+                self.status_var.set(f"正在朗读: {os.path.basename(self.txt_files[self.current_file_index])}")
+            else:
+                # 新播放
+                if self.current_file_index < 0:
+                    self.current_file_index = 0
+                    self.listbox.selection_set(0)
+                    self.preview_file()
+                self.start_reading()
         
     def start_reading(self):
         if not (0 <= self.current_file_index < len(self.txt_files)):
@@ -199,7 +219,7 @@ class TxtReader:
         self.is_stopped = False
         
         self.status_var.set(f"正在朗读: {os.path.basename(self.txt_files[self.current_file_index])}")
-        self.btn_play.config(text="朗读中...")
+        self.btn_play.config(text="⏸ 暂停")
         
         threading.Thread(target=self.read_content_thread, daemon=True).start()
         
@@ -280,26 +300,14 @@ class TxtReader:
     def on_reading_complete(self):
         self.is_playing = False
         self.is_paused = False
-        self.btn_play.config(text="朗读")
+        self.btn_play.config(text="▶ 播放")
         self.status_var.set(f"朗读完成")
         
-    def toggle_pause(self):
-        if not self.is_playing:
-            return
-        self.is_paused = not self.is_paused
-        if self.is_paused:
-            self.status_var.set("已暂停")
-            self.btn_pause.config(text="继续")
-        else:
-            self.status_var.set("继续朗读...")
-            self.btn_pause.config(text="暂停")
-                
     def stop_reading(self):
         self.is_stopped = True
         self.is_playing = False
         self.is_paused = False
-        self.btn_play.config(text="朗读")
-        self.btn_pause.config(text="暂停")
+        self.btn_play.config(text="▶ 播放")
         self.status_var.set("已停止")
         
     def prev_chapter(self):

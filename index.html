@@ -475,7 +475,23 @@
         function startReading() {
             if (!paragraphs.length) { document.getElementById('statusBar').textContent = '请先选择文件'; return; }
             speechSynthesis.cancel();
-            if (voices.length === 0) voices = speechSynthesis.getVoices();
+            
+            // 重新尝试加载语音列表（移动端需要用户交互后才能获取）
+            voices = speechSynthesis.getVoices();
+            if (voices.length === 0 && currentVoiceIndex < 0) {
+                // 尝试播放一个空语音来触发引擎
+                const triggerUtterance = new SpeechSynthesisUtterance('');
+                speechSynthesis.speak(triggerUtterance);
+                speechSynthesis.cancel();
+                // 再次获取
+                setTimeout(function() {
+                    voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        populateVoiceSelect();
+                    }
+                }, 100);
+            }
+            
             isPlaying = true; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
             document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;

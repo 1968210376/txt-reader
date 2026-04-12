@@ -260,10 +260,10 @@
         <!-- 文件选择 -->
         <div class="card">
             <div class="card-title">选择文件</div>
-            <input type="file" id="folderInput" multiple webkitdirectory>
+            <input type="file" id="folderInput" webkitdirectory multiple>
             <input type="file" id="fileInput" multiple accept=".txt">
-            <label for="folderInput" class="file-btn">选择文件夹 (电脑端)</label>
-            <label for="fileInput" class="file-btn file-btn-secondary">选择文件 (手机端)</label>
+            <button class="file-btn" onclick="document.getElementById('folderInput').click()">选择文件夹 (电脑端)</button>
+            <button class="file-btn file-btn-secondary" onclick="document.getElementById('fileInput').click()">选择文件 (手机端/通用)</button>
             <div class="file-list" id="fileList"></div>
         </div>
         

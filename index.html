@@ -579,7 +579,10 @@
                 document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
             } else {
                 if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                currentParagraphIndex = 0;
+                // 只有在没有恢复进度时才重置段落索引
+                if (paragraphs.length === 0) {
+                    currentParagraphIndex = 0;
+                }
                 startReading();
             }
         }

@@ -207,6 +207,9 @@
             let onlineVoices = [];
             let localVoices = [];
             
+        // 只保留指定的在线语音
+            const ALLOWED_ONLINE_VOICES = ['xiaoxiao', 'xiaoyi', 'yunxi'];
+            
             voices.forEach((voice, i) => {
                 const lang = voice.lang.toLowerCase();
                 const name = voice.name.toLowerCase();
@@ -219,10 +222,14 @@
                         isLocal: voice.localService
                     };
                     
-                    if (voice.localService) {
-                        localVoices.push(voiceInfo);
+                    // 过滤在线语音，只保留指定的
+                    if (!voice.localService) {
+                        const isAllowed = ALLOWED_ONLINE_VOICES.some(v => name.includes(v));
+                        if (isAllowed) {
+                            onlineVoices.push(voiceInfo);
+                        }
                     } else {
-                        onlineVoices.push(voiceInfo);
+                        localVoices.push(voiceInfo);
                     }
                 }
             });

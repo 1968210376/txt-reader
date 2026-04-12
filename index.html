@@ -33,7 +33,6 @@
         .file-item.active { background: #667eea30; border-left: 3px solid #667eea; color: #fff; }
         .file-name { font-size: 0.95rem; }
         
-        /* 卡拉OK内容区域 */
         .karaoke-container {
             background: #0d0d1a; border-radius: 10px; padding: 20px;
             min-height: 300px; max-height: 400px; overflow-y: auto;
@@ -42,17 +41,16 @@
             padding: 12px 0; margin: 8px 0;
             font-size: 1.1rem; line-height: 1.8;
             color: #666; border-radius: 8px;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease; cursor: pointer;
         }
+        .karaoke-paragraph:hover { background: #1a1a2e; }
         .karaoke-paragraph.active {
             color: #00ff88; font-size: 1.2rem;
             background: linear-gradient(90deg, #667eea20, #00ff8820);
             padding: 15px; margin: 12px 0;
             box-shadow: 0 0 20px rgba(0,255,136,0.2);
         }
-        .karaoke-paragraph.read {
-            color: #555;
-        }
+        .karaoke-paragraph.read { color: #555; }
         
         .control-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .ctrl-btn {
@@ -65,8 +63,15 @@
         .btn-play { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; }
         
         .progress-container { margin-bottom: 15px; }
-        .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #00ff88 100%); width: 0%; transition: width 0.3s; }
+        .progress-bar { 
+            height: 20px; background: #333; border-radius: 10px; overflow: hidden; 
+            cursor: pointer; position: relative;
+        }
+        .progress-bar:hover { background: #444; }
+        .progress-fill { 
+            height: 100%; background: linear-gradient(90deg, #667eea 0%, #00ff88 100%); 
+            width: 0%; transition: width 0.1s; pointer-events: none;
+        }
         .progress-text { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.85rem; color: #888; }
         
         .settings { display: flex; flex-wrap: wrap; gap: 15px; }
@@ -78,6 +83,9 @@
         
         .status-bar { background: #2a2a40; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; color: #888; text-align: center; }
         .tips { background: #1e3a5f; color: #7ec8e3; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
+        .voice-status { font-size: 0.8rem; margin-left: 10px; }
+        .voice-status.online { color: #00ff88; }
+        .voice-status.offline { color: #ff9800; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1a1a2e; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -99,7 +107,7 @@
         </div>
         
         <div class="card">
-            <div class="card-title">朗读内容</div>
+            <div class="card-title">朗读内容 (点击段落可跳转)</div>
             <div class="karaoke-container" id="karaokeContainer">
                 <div style="color: #555; text-align: center; padding: 50px;">请选择文件开始朗读</div>
             </div>
@@ -121,7 +129,9 @@
                 </button>
             </div>
             <div class="progress-container">
-                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-bar" id="progressBar" onclick="seekProgress(event)">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
                 <div class="progress-text">
                     <span id="currentPara">第 0/0 段</span>
                     <span id="progressPercent">0%</span>
@@ -132,7 +142,7 @@
         <div class="card">
             <div class="settings">
                 <div class="setting-group">
-                    <div class="setting-label">语音选择</div>
+                    <div class="setting-label">语音选择 <span id="voiceStatus" class="voice-status"></span></div>
                     <select id="voiceSelect"></select>
                 </div>
                 <div class="setting-group">
@@ -147,13 +157,24 @@
         </div>
         
         <div class="status-bar" id="statusBar">就绪</div>
-        <div class="tips">提示：当前朗读段落会以绿色高亮显示。使用Edge浏览器可获得更好的中文语音。</div>
+        <div class="tips">提示：点击进度条或段落可跳转。推荐使用Edge浏览器获得最佳语音效果。</div>
     </div>
 
     <script>
         let files = [], currentFileIndex = -1, currentContent = '', isPlaying = false, isPaused = false;
         let speechSynthesis = window.speechSynthesis, currentUtterance = null, voices = [];
         let paragraphs = [], currentParagraphIndex = 0;
+        let currentVoiceIndex = -1;
+        
+        // 常用中文语音名称（用于匹配）
+        const PREFERRED_VOICES = [
+            { name: 'xiaoxiao', label: '晓晓(女声)', type: 'online' },
+            { name: 'yunxi', label: '云希(男声)', type: 'online' },
+            { name: 'huihui', label: 'Huihui(女声)', type: 'local' },
+            { name: 'kangkang', label: 'Kangkang(男声)', type: 'local' },
+            { name: 'yaoyao', label: 'Yaoyao(女声)', type: 'local' },
+            { name: 'chinese', label: '中文语音', type: 'auto' },
+        ];
         
         document.addEventListener('DOMContentLoaded', function() {
             loadVoices();
@@ -165,29 +186,113 @@
         
         function loadVoices() {
             voices = speechSynthesis.getVoices();
-            if (voices.length === 0) { speechSynthesis.onvoiceschanged = loadVoices; setTimeout(loadVoices, 500); }
-            else populateVoiceSelect();
+            if (voices.length === 0) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+                setTimeout(loadVoices, 500);
+            } else {
+                populateVoiceSelect();
+            }
         }
         
         function populateVoiceSelect() {
             const select = document.getElementById('voiceSelect');
             select.innerHTML = '';
-            if (voices.length === 0) { select.innerHTML = '<option value="">未检测到语音</option>'; return; }
-            let xiaoxiaoIndex = -1;
+            
+            if (voices.length === 0) {
+                select.innerHTML = '<option value="">未检测到语音</option>';
+                return;
+            }
+            
+            // 分类语音：在线和本地
+            let onlineVoices = [];
+            let localVoices = [];
+            
             voices.forEach((voice, i) => {
-                const option = document.createElement('option');
-                option.value = i;
-                const lang = voice.lang.toLowerCase(), name = voice.name.toLowerCase();
-                if (name.includes('xiaoxiao') || name.includes('晓晓')) xiaoxiaoIndex = i;
-                if (lang.includes('zh') || lang.includes('cn')) {
-                    option.textContent = '★ ' + voice.name + (voice.localService ? '' : ' [在线]');
-                    select.insertBefore(option, select.firstChild);
-                } else {
-                    option.textContent = voice.name + ' (' + voice.lang + ')';
-                    select.appendChild(option);
+                const lang = voice.lang.toLowerCase();
+                const name = voice.name.toLowerCase();
+                
+                // 只保留中文语音
+                if (lang.includes('zh') || lang.includes('cn') || lang.includes('chinese')) {
+                    const voiceInfo = {
+                        index: i,
+                        name: voice.name,
+                        isLocal: voice.localService
+                    };
+                    
+                    if (voice.localService) {
+                        localVoices.push(voiceInfo);
+                    } else {
+                        onlineVoices.push(voiceInfo);
+                    }
                 }
             });
-            if (xiaoxiaoIndex >= 0) select.value = xiaoxiaoIndex;
+            
+            // 添加在线语音（优先）
+            if (onlineVoices.length > 0) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = '在线语音 (需联网)';
+                onlineVoices.forEach(v => {
+                    const option = document.createElement('option');
+                    option.value = v.index;
+                    option.textContent = v.name;
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+                
+                // 默认选择第一个在线语音
+                currentVoiceIndex = onlineVoices[0].index;
+                select.value = currentVoiceIndex;
+                updateVoiceStatus(true);
+            }
+            
+            // 添加本地语音
+            if (localVoices.length > 0) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = '本地语音 (离线可用)';
+                localVoices.forEach(v => {
+                    const option = document.createElement('option');
+                    option.value = v.index;
+                    option.textContent = v.name;
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+                
+                // 如果没有在线语音，默认选择第一个本地语音
+                if (onlineVoices.length === 0) {
+                    currentVoiceIndex = localVoices[0].index;
+                    select.value = currentVoiceIndex;
+                    updateVoiceStatus(false);
+                }
+            }
+            
+            // 如果没有中文语音，添加所有语音
+            if (onlineVoices.length === 0 && localVoices.length === 0) {
+                voices.forEach((voice, i) => {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = voice.name + ' (' + voice.lang + ')';
+                    select.appendChild(option);
+                });
+                currentVoiceIndex = 0;
+                updateVoiceStatus(false);
+            }
+            
+            select.addEventListener('change', function() {
+                currentVoiceIndex = parseInt(this.value);
+                const voice = voices[currentVoiceIndex];
+                updateVoiceStatus(!voice.localService);
+            });
+        }
+        
+        function updateVoiceStatus(isOnline) {
+            const status = document.getElementById('voiceStatus');
+            if (isOnline) {
+                status.textContent = '[在线]';
+                status.className = 'voice-status online';
+            } else {
+                status.textContent = '[本地]';
+                status.className = 'voice-status offline';
+            }
         }
         
         function handleFileSelect(e) {
@@ -223,7 +328,7 @@
                 paragraphs = currentContent.split('\n').filter(p => p.trim());
                 displayKaraoke(-1);
                 document.getElementById('statusBar').textContent = `当前: ${files[index].name}`;
-                updateProgress(0, 0);
+                updateProgress(0, paragraphs.length);
             };
             reader.readAsText(files[index], 'UTF-8');
         }
@@ -241,14 +346,39 @@
                 }
                 div.textContent = para.trim();
                 div.id = `para-${i}`;
+                div.onclick = () => jumpToParagraph(i);
                 container.appendChild(div);
             });
             
-            // 滚动到当前段落
             if (highlightIndex >= 0) {
                 const activeEl = document.getElementById(`para-${highlightIndex}`);
                 if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
+        }
+        
+        function jumpToParagraph(index) {
+            if (index < 0 || index >= paragraphs.length) return;
+            currentParagraphIndex = index;
+            speechSynthesis.cancel();
+            displayKaraoke(index);
+            updateProgress(index + 1, paragraphs.length);
+            
+            if (isPlaying || isPaused) {
+                isPaused = false;
+                isPlaying = true;
+                document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
+                readNextParagraph();
+            }
+        }
+        
+        function seekProgress(event) {
+            if (paragraphs.length === 0) return;
+            const progressBar = document.getElementById('progressBar');
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            const targetIndex = Math.min(Math.floor(percentage * paragraphs.length), paragraphs.length - 1);
+            jumpToParagraph(targetIndex);
         }
         
         function updateProgress(current, total) {
@@ -283,44 +413,59 @@
             isPlaying = true; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
             document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
-            
             readNextParagraph();
         }
         
         function readNextParagraph() {
             if (!isPlaying || currentParagraphIndex >= paragraphs.length) {
-                if (currentParagraphIndex >= paragraphs.length) {
-                    onReadingComplete();
-                }
+                if (currentParagraphIndex >= paragraphs.length) onReadingComplete();
                 return;
             }
-            
             if (isPaused) return;
             
             const para = paragraphs[currentParagraphIndex];
-            
-            // 高亮当前段落
             displayKaraoke(currentParagraphIndex);
             updateProgress(currentParagraphIndex + 1, paragraphs.length);
             
             currentUtterance = new SpeechSynthesisUtterance(para);
-            const voiceIndex = document.getElementById('voiceSelect').value;
-            if (voiceIndex && voices[voiceIndex]) currentUtterance.voice = voices[voiceIndex];
+            
+            // 使用当前选择的语音
+            if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
+                currentUtterance.voice = voices[currentVoiceIndex];
+            }
+            
             currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
             currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
             
             currentUtterance.onend = function() {
                 currentParagraphIndex++;
-                if (isPlaying && !isPaused) {
-                    readNextParagraph();
-                }
+                if (isPlaying && !isPaused) readNextParagraph();
             };
-            currentUtterance.onerror = function(e) { 
+            
+            currentUtterance.onerror = function(e) {
+                // 如果在线语音失败，尝试切换到本地语音
+                if (e.error === 'network' || e.error === 'not-allowed') {
+                    fallbackToLocalVoice();
+                }
                 currentParagraphIndex++;
                 if (isPlaying && !isPaused) readNextParagraph();
             };
             
             speechSynthesis.speak(currentUtterance);
+        }
+        
+        function fallbackToLocalVoice() {
+            // 查找本地语音
+            for (let i = 0; i < voices.length; i++) {
+                if (voices[i].localService && 
+                    (voices[i].lang.toLowerCase().includes('zh') || voices[i].lang.toLowerCase().includes('cn'))) {
+                    currentVoiceIndex = i;
+                    document.getElementById('voiceSelect').value = i;
+                    updateVoiceStatus(false);
+                    document.getElementById('statusBar').textContent = '网络不可用，已切换到本地语音';
+                    break;
+                }
+            }
         }
         
         function onReadingComplete() {
@@ -337,8 +482,7 @@
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectFile(currentFileIndex - 1); 
-            }
-            else { document.getElementById('statusBar').textContent = '已经是第一章了'; }
+            } else { document.getElementById('statusBar').textContent = '已经是第一章了'; }
         }
         
         function nextChapter() {
@@ -347,8 +491,7 @@
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectFile(currentFileIndex + 1); 
-            }
-            else { document.getElementById('statusBar').textContent = '已经是最后一章了'; }
+            } else { document.getElementById('statusBar').textContent = '已经是最后一章了'; }
         }
     </script>
 </body>

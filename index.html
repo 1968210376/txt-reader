@@ -491,11 +491,18 @@
                 displayKaraoke(thisIndex);
                 updateProgress(thisIndex + 1, paragraphs.length);
                 
-                // 移动端：语音开始播放后重新获取语音列表
-                const newVoices = speechSynthesis.getVoices();
-                if (newVoices.length > 0 && voices.length === 0) {
-                    voices = newVoices;
-                    populateVoiceSelect();
+                // 移动端：语音开始播放后持续尝试获取语音列表
+                if (voices.length === 0) {
+                    const checkVoices = setInterval(function() {
+                        const newVoices = speechSynthesis.getVoices();
+                        if (newVoices.length > 0) {
+                            voices = newVoices;
+                            populateVoiceSelect();
+                            clearInterval(checkVoices);
+                        }
+                    }, 200);
+                    // 3秒后停止检查
+                    setTimeout(function() { clearInterval(checkVoices); }, 3000);
                 }
             };
             

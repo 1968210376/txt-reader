@@ -182,7 +182,7 @@
             // 点击播放按钮时强制加载语音
             document.getElementById('playBtn').addEventListener('click', function() {
                 if (!voicesLoaded) {
-                    initVoices();
+                    forceLoadVoices();
                 }
             });
         });
@@ -229,6 +229,47 @@
                     }
                 }, 300);
             }
+        }
+        
+        function forceLoadVoices() {
+            // 强制触发语音引擎 - 播放一个短音频
+            const testText = '正在加载语音';
+            const utterance = new SpeechSynthesisUtterance(testText);
+            utterance.rate = 2; // 快速播放
+            utterance.volume = 0.5;
+            utterance.onstart = function() {
+                // 语音开始后立即取消
+                speechSynthesis.cancel();
+                // 现在应该能获取到语音列表了
+                voices = speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    voicesLoaded = true;
+                    populateVoiceSelect();
+                }
+            };
+            utterance.onerror = function() {
+                // 出错时也尝试获取
+                voices = speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    voicesLoaded = true;
+                    populateVoiceSelect();
+                }
+            };
+            speechSynthesis.speak(utterance);
+            
+            // 同时启动定时器持续检查
+            let attempts = 0;
+            const checkInterval = setInterval(function() {
+                attempts++;
+                voices = speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    voicesLoaded = true;
+                    populateVoiceSelect();
+                    clearInterval(checkInterval);
+                } else if (attempts >= 30) {
+                    clearInterval(checkInterval);
+                }
+            }, 200);
         }
         
         function populateVoiceSelect() {

@@ -6,65 +6,45 @@
     <title>TXT小说朗读工具</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh; padding: 10px; color: #e0e0e0;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; padding: 10px; color: #e0e0e0; }
         .container { max-width: 900px; margin: 0 auto; }
-        h1 { text-align: center; color: #667eea; margin-bottom: 15px; font-size: 1.5rem; text-shadow: 0 0 10px rgba(102,126,234,0.5); }
-        .card { background: #1e1e30; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #333; }
-        .card-title { font-size: 1rem; color: #888; margin-bottom: 10px; font-weight: 600; }
-        
+        h1 { text-align: center; color: #667eea; margin-bottom: 15px; font-size: 1.5rem; }
+        .card { background: #1e1e30; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #333; }
+        .card-title { font-size: 1rem; color: #888; margin-bottom: 10px; }
         .file-btn-group { display: flex; gap: 10px; }
         .file-btn { flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; }
-        .file-btn:active { transform: scale(0.98); }
         input[type="file"] { display: none; }
-        
         .file-list { max-height: 150px; overflow-y: auto; border: 1px solid #333; border-radius: 10px; margin-top: 10px; }
         .file-item { padding: 10px 15px; border-bottom: 1px solid #333; cursor: pointer; color: #aaa; }
         .file-item:last-child { border-bottom: none; }
-        .file-item:active { background: #2a2a40; }
         .file-item.active { background: #667eea30; border-left: 3px solid #667eea; color: #fff; }
-        .file-name { font-size: 0.95rem; }
-        
         .karaoke-container { background: #0d0d1a; border-radius: 10px; padding: 20px; min-height: 300px; max-height: 400px; overflow-y: auto; }
-        .karaoke-paragraph { padding: 12px 0; margin: 8px 0; font-size: 1.1rem; line-height: 1.8; color: #666; border-radius: 8px; transition: all 0.3s ease; cursor: pointer; }
-        .karaoke-paragraph:hover { background: #1a1a2e; }
+        .karaoke-paragraph { padding: 12px 0; margin: 8px 0; font-size: 1.1rem; line-height: 1.8; color: #666; cursor: pointer; transition: all 0.3s; }
         .karaoke-paragraph.active { color: #00ff88; font-size: 1.2rem; background: linear-gradient(90deg, #667eea20, #00ff8820); padding: 15px; margin: 12px 0; box-shadow: 0 0 20px rgba(0,255,136,0.2); }
         .karaoke-paragraph.read { color: #555; }
-        
         .control-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .ctrl-btn { padding: 18px 10px; border: none; border-radius: 12px; font-size: 1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .ctrl-btn .icon { font-size: 1.8rem; }
         .btn-prev, .btn-next { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; }
         .btn-play { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; }
-        
         .progress-container { margin-bottom: 15px; }
-        .progress-bar { height: 20px; background: #333; border-radius: 10px; overflow: hidden; cursor: pointer; position: relative; }
-        .progress-bar:hover { background: #444; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #00ff88 100%); width: 0%; transition: width 0.1s; pointer-events: none; }
+        .progress-bar { height: 20px; background: #333; border-radius: 10px; cursor: pointer; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #00ff88 100%); width: 0%; transition: width 0.1s; }
         .progress-text { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.85rem; color: #888; }
-        
         .settings { display: flex; flex-direction: column; gap: 15px; }
         .setting-group { width: 100%; }
         .setting-label { font-size: 0.9rem; color: #888; margin-bottom: 5px; }
-        select { width: 100%; padding: 10px; border: 1px solid #333; border-radius: 8px; font-size: 1rem; background: #2a2a40; color: #fff; }
-        input[type="range"] { width: 100%; height: 8px; border-radius: 4px; background: #333; outline: none; -webkit-appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #667eea; cursor: pointer; }
-        
+        select { width: 100%; padding: 10px; border: 1px solid #333; border-radius: 8px; background: #2a2a40; color: #fff; font-size: 1rem; }
+        input[type="range"] { width: 100%; }
         .status-bar { background: #2a2a40; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; color: #888; text-align: center; }
-        .tips { background: #1e3a5f; color: #7ec8e3; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
-        .voice-status { font-size: 0.8rem; margin-left: 10px; color: #00ff88; }
+        .tips { background: #1e3a5f; color: #7ec8e3; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1a1a2e; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>TXT小说朗读工具</h1>
-        
         <div class="card">
             <div class="card-title">选择文件</div>
             <input type="file" id="folderInput" webkitdirectory multiple>
@@ -75,50 +55,28 @@
             </div>
             <div class="file-list" id="fileList"></div>
         </div>
-        
         <div class="card">
             <div class="card-title">朗读内容 (点击段落可跳转)</div>
             <div class="karaoke-container" id="karaokeContainer">
                 <div style="color: #555; text-align: center; padding: 50px;">请选择文件开始朗读</div>
             </div>
         </div>
-        
         <div class="card">
             <div class="control-panel">
-                <button class="ctrl-btn btn-prev" onclick="prevChapter()">
-                    <span class="icon">⏮</span>
-                    <span>上一章</span>
-                </button>
-                <button class="ctrl-btn btn-play" id="playBtn" onclick="togglePlayPause()">
-                    <span class="icon">▶</span>
-                    <span>播放</span>
-                </button>
-                <button class="ctrl-btn btn-next" onclick="nextChapter()">
-                    <span class="icon">⏭</span>
-                    <span>下一章</span>
-                </button>
+                <button class="ctrl-btn btn-prev" onclick="prevChapter()"><span class="icon">⏮</span><span>上一章</span></button>
+                <button class="ctrl-btn btn-play" id="playBtn" onclick="togglePlayPause()"><span class="icon">▶</span><span>播放</span></button>
+                <button class="ctrl-btn btn-next" onclick="nextChapter()"><span class="icon">⏭</span><span>下一章</span></button>
             </div>
             <div class="progress-container">
-                <div class="progress-bar" id="progressBar" onclick="seekProgress(event)">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-text">
-                    <span id="currentPara">第 0/0 段</span>
-                    <span id="progressPercent">0%</span>
-                </div>
+                <div class="progress-bar" id="progressBar" onclick="seekProgress(event)"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-text"><span id="currentPara">第 0/0 段</span><span id="progressPercent">0%</span></div>
             </div>
         </div>
-        
         <div class="card">
             <div class="settings">
                 <div class="setting-group">
-                    <div class="setting-label">语音选择 <span id="voiceStatus" class="voice-status">[在线TTS]</span></div>
-                    <select id="voiceSelect">
-                        <option value="zh-CN-XiaoxiaoNeural">晓晓 (女声)</option>
-                        <option value="zh-CN-YunxiNeural">云希 (男声)</option>
-                        <option value="zh-CN-XiaoyiNeural">晓伊 (女声)</option>
-                        <option value="zh-CN-YunjianNeural">云健 (男声)</option>
-                    </select>
+                    <div class="setting-label">语音选择</div>
+                    <select id="voiceSelect"></select>
                 </div>
                 <div class="setting-group">
                     <div class="setting-label">语速: <span id="rateValue">1.0x</span></div>
@@ -126,22 +84,24 @@
                 </div>
             </div>
         </div>
-        
         <div class="status-bar" id="statusBar">就绪</div>
-        <div class="tips">提示：支持后台播放、锁屏播放、耳机控制。需要联网使用。</div>
+        <div class="tips">提示：点击进度条或段落可跳转。锁屏后可通过通知栏控制播放。</div>
     </div>
 
     <script>
         let files = [], currentFileIndex = -1, currentContent = '', isPlaying = false, isPaused = false;
-        let paragraphs = [], currentParagraphIndex = 0;
-        let audio = null;
-        let audioQueue = [];
-        let isProcessingQueue = false;
+        let speechSynthesis = window.speechSynthesis, currentUtterance = null, voices = [];
+        let paragraphs = [], currentParagraphIndex = 0, currentVoiceIndex = -1;
+        
+        // 后台播放用的音频
+        let bgAudio = null;
+        let audioContext = null;
         
         const CACHE_KEY = 'txt_reader_cache';
         let cachedData = null;
-        
+
         document.addEventListener('DOMContentLoaded', function() {
+            loadVoices();
             loadCache();
             initMediaSession();
             document.getElementById('folderInput').addEventListener('change', handleFileSelect);
@@ -150,232 +110,166 @@
                 document.getElementById('rateValue').textContent = this.value + 'x';
                 saveCache();
             });
-            document.getElementById('voiceSelect').addEventListener('change', saveCache);
         });
-        
-        // ========== TTS 音频生成 ==========
-        function getTTSUrl(text, voice, rate) {
-            // 使用 VoiceRSS 免费API (每日35000字符免费)
-            // 或使用 Google Translate TTS
-            const encodedText = encodeURIComponent(text);
-            const rateValue = Math.round(parseFloat(rate) * 10);
-            
-            // 使用 Google TTS (不需要API Key)
-            return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=zh-CN&client=tw-ob&ttsspeed=${rate}`;
-        }
-        
-        async function speakParagraph(index) {
-            if (index < 0 || index >= paragraphs.length) return;
-            
-            const text = paragraphs[index].trim();
-            if (!text) {
-                currentParagraphIndex++;
-                if (isPlaying && !isPaused) speakParagraph(currentParagraphIndex);
-                return;
+
+        // ========== 后台播放保持 ==========
+        function startBackgroundAudio() {
+            // 创建AudioContext生成静音音频
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
             
-            // 如果文本太长，分段处理
-            const chunks = splitText(text, 200);
-            audioQueue = [];
+            // 创建一个持续的低频振荡器
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
             
-            for (const chunk of chunks) {
-                const voice = document.getElementById('voiceSelect').value;
-                const rate = document.getElementById('rateSlider').value;
-                const url = getTTSUrl(chunk, voice, rate);
-                audioQueue.push(url);
-            }
+            oscillator.frequency.value = 1; // 极低频率，人耳听不到
+            gainNode.gain.value = 0.01; // 极小音量
             
-            playAudioQueue(index);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            
+            // 保存引用以便停止
+            bgAudio = oscillator;
+            
+            // 同时创建一个静音的Audio元素作为备用
+            const silentMp3 = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNBRNrAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+            silentMp3.loop = true;
+            silentMp3.volume = 0.01;
+            silentMp3.play().catch(e => {});
         }
         
-        function splitText(text, maxLength) {
-            const chunks = [];
-            let current = '';
-            for (let i = 0; i < text.length; i++) {
-                current += text[i];
-                if (current.length >= maxLength && /[\u3002\uff0c\uff01\uff1f\n]/.test(text[i])) {
-                    chunks.push(current.trim());
-                    current = '';
-                }
+        function stopBackgroundAudio() {
+            if (bgAudio) {
+                bgAudio.stop();
+                bgAudio = null;
             }
-            if (current.trim()) chunks.push(current.trim());
-            return chunks.length > 0 ? chunks : [text];
         }
-        
-        async function playAudioQueue(paragraphIndex) {
-            if (audioQueue.length === 0) {
-                currentParagraphIndex++;
-                saveCache();
-                if (isPlaying && !isPaused) {
-                    if (currentParagraphIndex < paragraphs.length) {
-                        speakParagraph(currentParagraphIndex);
-                    } else {
-                        onReadingComplete();
-                    }
-                }
-                return;
-            }
-            
-            if (!isPlaying || isPaused) return;
-            
-            const url = audioQueue.shift();
-            
-            document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
-            
-            if (audio) {
-                audio.pause();
-                audio.src = '';
-            }
-            
-            audio = new Audio(url);
-            audio.crossOrigin = 'anonymous';
-            
-            audio.onplay = function() {
-                // 音频开始播放时更新 Media Session
-                displayKaraoke(paragraphIndex);
-                updateProgress(paragraphIndex + 1, paragraphs.length);
-                updateMediaSession(files[currentFileIndex]?.name || '', true);
-            };
-            
-            audio.oncanplaythrough = function() {
-                audio.play().catch(e => {
-                    console.error('播放失败，尝试备用方案', e);
-                    fallbackToWebSpeech(paragraphIndex);
-                });
-            };
-            
-            audio.onended = function() {
-                playAudioQueue(paragraphIndex);
-            };
-            
-            audio.onerror = function(e) {
-                console.error('TTS加载失败，使用备用方案', e);
-                fallbackToWebSpeech(paragraphIndex);
-            };
-            
-            audio.load();
-        }
-        
-        // 备用方案：使用浏览器内置TTS
-        function fallbackToWebSpeech(paragraphIndex) {
-            const text = paragraphs[paragraphIndex];
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = parseFloat(document.getElementById('rateSlider').value);
-            
-            utterance.onstart = function() {
-                displayKaraoke(paragraphIndex);
-                updateProgress(paragraphIndex + 1, paragraphs.length);
-                updateMediaSession(files[currentFileIndex]?.name || '', true);
-            };
-            
-            utterance.onend = function() {
-                currentParagraphIndex++;
-                saveCache();
-                if (isPlaying && !isPaused) {
-                    if (currentParagraphIndex < paragraphs.length) {
-                        speakParagraph(currentParagraphIndex);
-                    } else {
-                        onReadingComplete();
-                    }
-                }
-            };
-            
-            speechSynthesis.speak(utterance);
-            updateProgress(paragraphIndex + 1, paragraphs.length);
-        }
-        // ========== TTS 结束 ==========
+        // ========== 后台播放保持结束 ==========
         
         // ========== Media Session ==========
         function initMediaSession() {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.setActionHandler('play', function() {
-                    if (isPaused && audio) {
-                        isPaused = false;
-                        isPlaying = true;
-                        audio.play();
+                    if (isPaused) {
+                        isPaused = false; isPlaying = true;
+                        speechSynthesis.resume();
+                        startBackgroundAudio();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-                        updateMediaSession(files[currentFileIndex]?.name || '', true);
+                        updateMediaSession();
                     } else if (!isPlaying && paragraphs.length > 0) {
                         startReading();
                     }
                 });
-                
                 navigator.mediaSession.setActionHandler('pause', function() {
-                    if (isPlaying && audio) {
-                        isPaused = true;
-                        isPlaying = false;
-                        audio.pause();
+                    if (isPlaying) {
+                        isPaused = true; isPlaying = false;
+                        speechSynthesis.pause();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
-                        updateMediaSession(files[currentFileIndex]?.name || '', false);
+                        updateMediaSession();
                     }
                 });
-                
                 navigator.mediaSession.setActionHandler('previoustrack', function() { prevChapter(); });
                 navigator.mediaSession.setActionHandler('nexttrack', function() { nextChapter(); });
             }
         }
         
-        function updateMediaSession(title, playing) {
+        function updateMediaSession() {
             if ('mediaSession' in navigator) {
-                const fileName = files[currentFileIndex]?.name || '未知';
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: fileName,
+                    title: files[currentFileIndex]?.name || '朗读中',
                     artist: 'TXT小说朗读',
                     album: `第 ${currentParagraphIndex + 1}/${paragraphs.length} 段`,
                 });
-                navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+                navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
             }
         }
         // ========== Media Session 结束 ==========
         
-        // ========== 缓存功能 ==========
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            if (voices.length > 0) populateVoiceSelect();
+            speechSynthesis.onvoiceschanged = function() {
+                voices = speechSynthesis.getVoices();
+                if (voices.length > 0) populateVoiceSelect();
+            };
+        }
+        
+        function populateVoiceSelect() {
+            const select = document.getElementById('voiceSelect');
+            if (voices.length === 0) {
+                select.innerHTML = '<option value="-1">系统默认语音</option>';
+                return;
+            }
+            select.innerHTML = '';
+            let onlineVoices = [], localVoices = [];
+            voices.forEach((v, i) => {
+                const lang = v.lang.toLowerCase();
+                if (lang.includes('zh') || lang.includes('cn')) {
+                    const info = { index: i, name: v.name };
+                    v.localService ? localVoices.push(info) : onlineVoices.push(info);
+                }
+            });
+            if (onlineVoices.length > 0) {
+                const g = document.createElement('optgroup'); g.label = '在线语音';
+                onlineVoices.forEach(v => { g.appendChild(new Option(v.name, v.index)); });
+                select.appendChild(g);
+                currentVoiceIndex = onlineVoices.find(v => v.name.toLowerCase().includes('xiaoxiao'))?.index || onlineVoices[0].index;
+                select.value = currentVoiceIndex;
+            }
+            if (localVoices.length > 0) {
+                const g = document.createElement('optgroup'); g.label = '本地语音';
+                localVoices.forEach(v => { g.appendChild(new Option(v.name, v.index)); });
+                select.appendChild(g);
+                if (!onlineVoices.length) currentVoiceIndex = localVoices[0].index;
+            }
+            if (!onlineVoices.length && !localVoices.length) {
+                voices.forEach((v, i) => select.appendChild(new Option(v.name, i)));
+                currentVoiceIndex = 0;
+            }
+            select.onchange = function() { currentVoiceIndex = parseInt(this.value); };
+        }
+        
+        // ========== 缓存 ==========
         function saveCache() {
-            if (files.length === 0) return;
+            if (!files.length) return;
             const allContents = {};
             files.forEach(f => { if (f.content) allContents[f.name] = f.content; });
-            
-            const cacheData = {
-                files: files.map(f => ({ name: f.name })),
-                allContents: allContents,
-                currentFileIndex: currentFileIndex,
-                currentParagraphIndex: currentParagraphIndex,
-                currentContent: currentContent,
-                rate: document.getElementById('rateSlider').value,
-                voice: document.getElementById('voiceSelect').value,
-                timestamp: Date.now()
-            };
-            try { localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData)); } catch(e) {}
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    files: files.map(f => ({ name: f.name })),
+                    allContents,
+                    currentFileIndex, currentParagraphIndex, currentContent,
+                    rate: document.getElementById('rateSlider').value,
+                    timestamp: Date.now()
+                }));
+            } catch(e) {}
         }
         
         function loadCache() {
             try {
                 const saved = localStorage.getItem(CACHE_KEY);
-                if (saved) {
-                    cachedData = JSON.parse(saved);
-                    if (cachedData.rate) {
-                        document.getElementById('rateSlider').value = cachedData.rate;
-                        document.getElementById('rateValue').textContent = cachedData.rate + 'x';
-                    }
-                    if (cachedData.voice) document.getElementById('voiceSelect').value = cachedData.voice;
-                    if (cachedData.files && cachedData.files.length > 0) showCachePrompt();
+                if (!saved) return;
+                cachedData = JSON.parse(saved);
+                if (cachedData.rate) {
+                    document.getElementById('rateSlider').value = cachedData.rate;
+                    document.getElementById('rateValue').textContent = cachedData.rate + 'x';
+                }
+                if (cachedData.files?.length) {
+                    const fileName = cachedData.files[cachedData.currentFileIndex]?.name || '未知';
+                    document.getElementById('fileList').innerHTML = `
+                        <div style="padding:15px;text-align:center">
+                            <p style="color:#00ff88;margin-bottom:10px">发现上次阅读记录</p>
+                            <p style="color:#aaa">上次读到: ${fileName} - 第${cachedData.currentParagraphIndex + 1}段</p>
+                            <div style="margin-top:15px;display:flex;gap:10px;justify-content:center">
+                                <button onclick="restoreCache()" style="padding:8px 20px;background:#667eea;border:none;border-radius:5px;color:#fff;cursor:pointer">恢复</button>
+                                <button onclick="clearCache()" style="padding:8px 20px;background:#555;border:none;border-radius:5px;color:#fff;cursor:pointer">清除</button>
+                            </div>
+                        </div>`;
                 }
             } catch(e) {}
-        }
-        
-        function showCachePrompt() {
-            const fileList = document.getElementById('fileList');
-            const fileName = cachedData.files[cachedData.currentFileIndex]?.name || '未知';
-            fileList.innerHTML = `
-                <div style="padding: 15px; text-align: center;">
-                    <p style="color: #00ff88; margin-bottom: 10px;">发现上次阅读记录</p>
-                    <p style="color: #aaa; font-size: 0.9rem;">共 ${cachedData.files.length} 个文件，上次读到: ${fileName}</p>
-                    <p style="color: #888; font-size: 0.85rem;">进度: 第 ${cachedData.currentParagraphIndex + 1} 段</p>
-                    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                        <button onclick="restoreCache()" style="padding: 8px 20px; background: #667eea; border: none; border-radius: 5px; color: white; cursor: pointer;">恢复进度</button>
-                        <button onclick="clearCache()" style="padding: 8px 20px; background: #555; border: none; border-radius: 5px; color: white; cursor: pointer;">清除记录</button>
-                    </div>
-                </div>
-            `;
         }
         
         function restoreCache() {
@@ -383,48 +277,40 @@
             files = cachedData.files.map(f => ({ name: f.name, content: cachedData.allContents?.[f.name] }));
             currentFileIndex = cachedData.currentFileIndex;
             currentParagraphIndex = cachedData.currentParagraphIndex;
-            currentContent = cachedData.allContents?.[cachedData.files[currentFileIndex]?.name] || cachedData.currentContent || '';
+            currentContent = cachedData.allContents?.[cachedData.files[currentFileIndex]?.name] || '';
             paragraphs = currentContent.split('\n').filter(p => p.trim());
-            
             const fileList = document.getElementById('fileList');
             fileList.innerHTML = '';
-            cachedData.files.forEach((f, index) => {
+            cachedData.files.forEach((f, i) => {
                 const div = document.createElement('div');
-                div.className = 'file-item' + (index === currentFileIndex ? ' active' : '');
-                div.innerHTML = `<span class="file-name">${index + 1}. ${f.name}</span>`;
-                div.onclick = () => selectCachedFile(index);
+                div.className = 'file-item' + (i === currentFileIndex ? ' active' : '');
+                div.innerHTML = `<span class="file-name">${i + 1}. ${f.name}</span>`;
+                div.onclick = () => selectCachedFile(i);
                 fileList.appendChild(div);
             });
             displayKaraoke(currentParagraphIndex);
             updateProgress(currentParagraphIndex + 1, paragraphs.length);
-            document.getElementById('statusBar').textContent = `已恢复: ${cachedData.files[currentFileIndex].name}`;
         }
         
-        function selectCachedFile(index) {
-            const f = files[index];
-            if (f?.content) {
-                currentFileIndex = index;
-                currentParagraphIndex = 0;
-                currentContent = f.content;
-                paragraphs = currentContent.split('\n').filter(p => p.trim());
-                document.querySelectorAll('.file-item').forEach((item, i) => item.classList.toggle('active', i === index));
-                displayKaraoke(-1);
-                updateProgress(0, paragraphs.length);
-                saveCache();
-            }
+        function selectCachedFile(i) {
+            const f = files[i];
+            if (!f?.content) return;
+            currentFileIndex = i;
+            currentParagraphIndex = 0;
+            currentContent = f.content;
+            paragraphs = currentContent.split('\n').filter(p => p.trim());
+            document.querySelectorAll('.file-item').forEach((el, idx) => el.classList.toggle('active', idx === i));
+            displayKaraoke(-1);
+            updateProgress(0, paragraphs.length);
+            saveCache();
         }
         
-        function clearCache() {
-            localStorage.removeItem(CACHE_KEY);
-            cachedData = null;
-            document.getElementById('fileList').innerHTML = '';
-            document.getElementById('statusBar').textContent = '缓存已清除';
-        }
-        // ========== 缓存功能结束 ==========
+        function clearCache() { localStorage.removeItem(CACHE_KEY); cachedData = null; document.getElementById('fileList').innerHTML = ''; }
+        // ========== 缓存结束 ==========
         
         function handleFileSelect(e) {
             const selected = Array.from(e.target.files).filter(f => f.name.endsWith('.txt'));
-            if (selected.length > 0) {
+            if (selected.length) {
                 files = selected.sort((a, b) => a.name.localeCompare(b.name));
                 updateFileList();
                 clearCache();
@@ -436,114 +322,128 @@
         function updateFileList() {
             const fileList = document.getElementById('fileList');
             fileList.innerHTML = '';
-            files.forEach((file, index) => {
+            files.forEach((file, i) => {
                 const div = document.createElement('div');
                 div.className = 'file-item';
-                div.innerHTML = `<span class="file-name">${index + 1}. ${file.name}</span>`;
-                div.onclick = () => selectFile(index);
+                div.innerHTML = `<span class="file-name">${i + 1}. ${file.name}</span>`;
+                div.onclick = () => selectFile(i);
                 fileList.appendChild(div);
             });
             document.getElementById('statusBar').textContent = `已加载 ${files.length} 个文件`;
             currentFileIndex = -1;
         }
         
-        function selectFile(index) {
-            currentFileIndex = index;
+        function selectFile(i) {
+            currentFileIndex = i;
             currentParagraphIndex = 0;
-            document.querySelectorAll('.file-item').forEach((item, i) => item.classList.toggle('active', i === index));
+            document.querySelectorAll('.file-item').forEach((el, idx) => el.classList.toggle('active', idx === i));
             const reader = new FileReader();
             reader.onload = function(e) {
                 currentContent = e.target.result;
                 paragraphs = currentContent.split('\n').filter(p => p.trim());
-                files[index].content = currentContent;
+                files[i].content = currentContent;
                 displayKaraoke(-1);
                 updateProgress(0, paragraphs.length);
                 saveCache();
             };
-            reader.readAsText(files[index], 'UTF-8');
+            reader.readAsText(files[i], 'UTF-8');
         }
         
-        function displayKaraoke(highlightIndex) {
+        function displayKaraoke(hl) {
             const container = document.getElementById('karaokeContainer');
             container.innerHTML = '';
-            paragraphs.forEach((para, i) => {
+            paragraphs.forEach((p, i) => {
                 const div = document.createElement('div');
-                div.className = 'karaoke-paragraph' + (i === highlightIndex ? ' active' : i < highlightIndex ? ' read' : '');
-                div.textContent = para.trim();
-                div.id = `para-${i}`;
+                div.className = 'karaoke-paragraph' + (i === hl ? ' active' : i < hl ? ' read' : '');
+                div.textContent = p.trim();
                 div.onclick = () => jumpToParagraph(i);
                 container.appendChild(div);
             });
-            if (highlightIndex >= 0) document.getElementById(`para-${highlightIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (hl >= 0) container.children[hl]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
-        function jumpToParagraph(index) {
-            if (index < 0 || index >= paragraphs.length) return;
-            stopAudio();
-            currentParagraphIndex = index;
-            displayKaraoke(index);
-            updateProgress(index + 1, paragraphs.length);
+        function jumpToParagraph(i) {
+            if (i < 0 || i >= paragraphs.length) return;
+            speechSynthesis.cancel();
+            currentParagraphIndex = i;
+            displayKaraoke(i);
+            updateProgress(i + 1, paragraphs.length);
             if (isPlaying || isPaused) {
                 isPaused = false; isPlaying = true;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-                speakParagraph(currentParagraphIndex);
+                readParagraph(i);
             }
         }
         
-        function seekProgress(event) {
-            if (paragraphs.length === 0) return;
+        function seekProgress(e) {
+            if (!paragraphs.length) return;
             const rect = document.getElementById('progressBar').getBoundingClientRect();
-            jumpToParagraph(Math.min(Math.floor(((event.clientX - rect.left) / rect.width) * paragraphs.length), paragraphs.length - 1));
+            const pct = (e.clientX - rect.left) / rect.width;
+            jumpToParagraph(Math.min(Math.floor(pct * paragraphs.length), paragraphs.length - 1));
         }
         
-        function updateProgress(current, total) {
-            const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-            document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('currentPara').textContent = `第 ${current}/${total} 段`;
-            document.getElementById('progressPercent').textContent = percent + '%';
-        }
-        
-        function stopAudio() {
-            if (audio) { audio.pause(); audio.src = ''; }
-            audioQueue = [];
-            speechSynthesis.cancel();
+        function updateProgress(cur, total) {
+            const pct = total ? Math.round((cur / total) * 100) : 0;
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('currentPara').textContent = `第 ${cur}/${total} 段`;
+            document.getElementById('progressPercent').textContent = pct + '%';
         }
         
         function togglePlayPause() {
             if (isPlaying) {
                 isPaused = true; isPlaying = false;
-                if (audio) audio.pause();
-                speechSynthesis.cancel();
+                speechSynthesis.pause();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
-                document.getElementById('statusBar').textContent = '已暂停';
-                updateMediaSession('', false);
+                updateMediaSession();
             } else if (isPaused) {
                 isPaused = false; isPlaying = true;
-                if (audio) audio.play();
+                speechSynthesis.resume();
+                startBackgroundAudio();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-                updateMediaSession(files[currentFileIndex]?.name || '', true);
+                updateMediaSession();
             } else {
-                if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                if (paragraphs.length > 0) startReading();
+                if (currentFileIndex < 0 && files.length) selectFile(0);
+                if (paragraphs.length) startReading();
             }
         }
         
         function startReading() {
-            if (!paragraphs.length) { document.getElementById('statusBar').textContent = '请先选择文件'; return; }
-            stopAudio();
+            speechSynthesis.cancel();
+            startBackgroundAudio();
             isPlaying = true; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-            speakParagraph(currentParagraphIndex);
+            updateMediaSession();
+            readParagraph(currentParagraphIndex);
+        }
+        
+        function readParagraph(i) {
+            if (!isPlaying || i >= paragraphs.length) { if (i >= paragraphs.length) onReadingComplete(); return; }
+            if (isPaused) return;
+            const utterance = new SpeechSynthesisUtterance(paragraphs[i]);
+            if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) utterance.voice = voices[currentVoiceIndex];
+            utterance.rate = parseFloat(document.getElementById('rateSlider').value);
+            utterance.onstart = function() {
+                currentParagraphIndex = i;
+                displayKaraoke(i);
+                updateProgress(i + 1, paragraphs.length);
+                updateMediaSession();
+                document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
+            };
+            utterance.onend = function() {
+                saveCache();
+                if (isPlaying && !isPaused) readParagraph(i + 1);
+            };
+            utterance.onerror = function() { if (isPlaying && !isPaused) readParagraph(i + 1); };
+            speechSynthesis.speak(utterance);
         }
         
         function onReadingComplete() {
-            stopAudio();
+            stopBackgroundAudio();
             isPlaying = false; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
             displayKaraoke(-1);
             updateProgress(paragraphs.length, paragraphs.length);
-            updateMediaSession('', false);
-            
+            updateMediaSession();
             if (currentFileIndex < files.length - 1) {
                 document.getElementById('statusBar').textContent = '自动播放下一章...';
                 setTimeout(() => { if (!isPlaying) { nextChapter(); setTimeout(startReading, 500); } }, 1000);
@@ -554,23 +454,19 @@
         
         function prevChapter() {
             if (currentFileIndex > 0) {
-                stopAudio();
+                speechSynthesis.cancel(); stopBackgroundAudio();
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectCachedFile(currentFileIndex - 1);
-            } else {
-                document.getElementById('statusBar').textContent = '已经是第一章了';
             }
         }
         
         function nextChapter() {
             if (currentFileIndex < files.length - 1) {
-                stopAudio();
+                speechSynthesis.cancel(); stopBackgroundAudio();
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectCachedFile(currentFileIndex + 1);
-            } else {
-                document.getElementById('statusBar').textContent = '已经是最后一章了';
             }
         }
     </script>

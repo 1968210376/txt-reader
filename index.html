@@ -747,7 +747,7 @@
                 speechSynthesis.cancel();
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
-                selectFile(currentFileIndex - 1); 
+                selectCachedFile(currentFileIndex - 1);
             } else { document.getElementById('statusBar').textContent = '已经是第一章了'; }
         }
         
@@ -756,7 +756,7 @@
                 speechSynthesis.cancel();
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
-                selectFile(currentFileIndex + 1); 
+                selectCachedFile(currentFileIndex + 1);
             } else { document.getElementById('statusBar').textContent = '已经是最后一章了'; }
         }
     </script>

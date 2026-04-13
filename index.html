@@ -326,21 +326,41 @@
             const cacheData = {
                 files: files.map(f => ({
                     name: f.name,
-                    content: null // 内容太大，单独存储
+                    content: null // 内容单独存储在 filesContent 中
                 })),
+                filesContent: files.map(f => {
+                    // 如果文件有text方法，读取内容
+                    if (f.text) {
+                        return null; // 异步读取，这里先设为null
+                    }
+                    return null;
+                }),
                 currentFileIndex: currentFileIndex,
                 currentParagraphIndex: currentParagraphIndex,
                 rate: document.getElementById('rateSlider').value,
                 pitch: document.getElementById('pitchSlider').value,
-                currentContent: currentContent,
+                allContents: {}, // 存储所有文件内容
                 timestamp: Date.now()
             };
             
-            try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-            } catch(e) {
-                console.log('缓存保存失败', e);
-            }
+            // 异步保存所有文件内容
+            const promises = files.map((f, i) => {
+                if (f.text) {
+                    return f.text().then(content => {
+                        cacheData.allContents[f.name] = content;
+                    });
+                }
+                return Promise.resolve();
+            });
+            
+            Promise.all(promises).then(() => {
+                cacheData.currentContent = currentContent;
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+                } catch(e) {
+                    console.log('缓存保存失败', e);
+                }
+            });
         }
         
         function loadCache() {
@@ -390,14 +410,25 @@
         function restoreCache() {
             if (!cachedData) return;
             
-            // 恢复内容
-            if (cachedData.currentContent) {
-                currentContent = cachedData.currentContent;
-                paragraphs = currentContent.split('\n').filter(p => p.trim());
+            // 恢复文件列表
+            files = cachedData.files.map(f => ({ name: f.name }));
+            
+            // 恢复所有文件内容
+            if (cachedData.allContents) {
+                files = files.map((f, i) => ({
+                    name: f.name,
+                    content: cachedData.allContents[f.name]
+                }));
             }
             
             currentFileIndex = cachedData.currentFileIndex;
             currentParagraphIndex = cachedData.currentParagraphIndex;
+            
+            // 恢复当前内容
+            if (cachedData.currentContent) {
+                currentContent = cachedData.currentContent;
+                paragraphs = currentContent.split('\n').filter(p => p.trim());
+            }
             
             // 更新文件列表显示
             const fileList = document.getElementById('fileList');
@@ -406,7 +437,7 @@
                 const div = document.createElement('div');
                 div.className = 'file-item' + (index === currentFileIndex ? ' active' : '');
                 div.innerHTML = `<span class="file-name">${index + 1}. ${f.name}</span>`;
-                div.onclick = () => selectFile(index);
+                div.onclick = () => selectCachedFile(index);
                 fileList.appendChild(div);
             });
             
@@ -414,9 +445,27 @@
             displayKaraoke(currentParagraphIndex);
             updateProgress(currentParagraphIndex + 1, paragraphs.length);
             document.getElementById('statusBar').textContent = `已恢复: ${cachedData.files[currentFileIndex].name} - 第 ${currentParagraphIndex + 1} 段`;
-            
-            // 恢复files数组（虚拟文件对象，只有名称）
-            files = cachedData.files.map(f => ({ name: f.name }));
+        }
+        
+        function selectCachedFile(index) {
+            const cachedFile = files[index];
+            if (cachedFile && cachedFile.content) {
+                currentFileIndex = index;
+                currentParagraphIndex = 0;
+                currentContent = cachedFile.content;
+                paragraphs = currentContent.split('\n').filter(p => p.trim());
+                
+                document.querySelectorAll('.file-item').forEach((item, i) => { 
+                    item.classList.toggle('active', i === index); 
+                });
+                
+                displayKaraoke(-1);
+                document.getElementById('statusBar').textContent = `当前: ${cachedFile.name}`;
+                updateProgress(0, paragraphs.length);
+                saveCache();
+            } else {
+                document.getElementById('statusBar').textContent = '请重新选择文件夹以切换章节';
+            }
         }
         
         function clearCacheAndHide() {
@@ -674,9 +723,23 @@
         function onReadingComplete() {
             isPlaying = false; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
-            document.getElementById('statusBar').textContent = '朗读完成';
             displayKaraoke(-1);
             updateProgress(paragraphs.length, paragraphs.length);
+            
+            // 自动播放下一章
+            if (currentFileIndex < files.length - 1) {
+                document.getElementById('statusBar').textContent = '本章节朗读完成，自动播放下一章...';
+                setTimeout(function() {
+                    if (!isPlaying) { // 确保用户没有手动操作
+                        nextChapter();
+                        setTimeout(function() {
+                            startReading();
+                        }, 500);
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('statusBar').textContent = '全部朗读完成';
+            }
         }
         
         function prevChapter() {

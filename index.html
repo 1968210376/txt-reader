@@ -323,38 +323,33 @@
         function saveCache() {
             if (files.length === 0) return;
             
-            const cacheData = {
-                files: files.map(f => ({
-                    name: f.name,
-                    content: null // 内容单独存储在 filesContent 中
-                })),
-                filesContent: files.map(f => {
-                    // 如果文件有text方法，读取内容
-                    if (f.text) {
-                        return null; // 异步读取，这里先设为null
-                    }
-                    return null;
-                }),
-                currentFileIndex: currentFileIndex,
-                currentParagraphIndex: currentParagraphIndex,
-                rate: document.getElementById('rateSlider').value,
-                pitch: document.getElementById('pitchSlider').value,
-                allContents: {}, // 存储所有文件内容
-                timestamp: Date.now()
-            };
-            
             // 异步保存所有文件内容
             const promises = files.map((f, i) => {
                 if (f.text) {
                     return f.text().then(content => {
-                        cacheData.allContents[f.name] = content;
+                        return { name: f.name, content: content };
                     });
                 }
-                return Promise.resolve();
+                return Promise.resolve({ name: f.name, content: f.content || null });
             });
             
-            Promise.all(promises).then(() => {
-                cacheData.currentContent = currentContent;
+            Promise.all(promises).then(results => {
+                const allContents = {};
+                results.forEach(r => {
+                    if (r.content) allContents[r.name] = r.content;
+                });
+                
+                const cacheData = {
+                    files: files.map(f => ({ name: f.name })),
+                    allContents: allContents,
+                    currentFileIndex: currentFileIndex,
+                    currentParagraphIndex: currentParagraphIndex,
+                    currentContent: currentContent,
+                    rate: document.getElementById('rateSlider').value,
+                    pitch: document.getElementById('pitchSlider').value,
+                    timestamp: Date.now()
+                };
+                
                 try {
                     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
                 } catch(e) {
@@ -410,22 +405,21 @@
         function restoreCache() {
             if (!cachedData) return;
             
-            // 恢复文件列表
-            files = cachedData.files.map(f => ({ name: f.name }));
-            
-            // 恢复所有文件内容
-            if (cachedData.allContents) {
-                files = files.map((f, i) => ({
-                    name: f.name,
-                    content: cachedData.allContents[f.name]
-                }));
-            }
+            // 恢复文件列表，包含内容
+            files = cachedData.files.map(f => ({
+                name: f.name,
+                content: cachedData.allContents ? cachedData.allContents[f.name] : null
+            }));
             
             currentFileIndex = cachedData.currentFileIndex;
             currentParagraphIndex = cachedData.currentParagraphIndex;
             
-            // 恢复当前内容
-            if (cachedData.currentContent) {
+            // 恢复当前内容（确保与currentFileIndex对应）
+            if (cachedData.allContents && cachedData.files[currentFileIndex]) {
+                const currentFileName = cachedData.files[currentFileIndex].name;
+                currentContent = cachedData.allContents[currentFileName] || cachedData.currentContent || '';
+                paragraphs = currentContent.split('\n').filter(p => p.trim());
+            } else if (cachedData.currentContent) {
                 currentContent = cachedData.currentContent;
                 paragraphs = currentContent.split('\n').filter(p => p.trim());
             }

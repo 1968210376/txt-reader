@@ -124,26 +124,38 @@
         function initMediaSession() {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.setActionHandler('play', function() {
+                    console.log('MediaSession: play clicked');
                     if (isPaused) {
+                        // 从暂停恢复
                         isPaused = false; isPlaying = true;
-                        speechSynthesis.resume();
                         startBackgroundAudio();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
                         updateMediaSession();
+                        // 重新开始朗读当前段落
+                        readParagraph(currentParagraphIndex);
                     } else if (!isPlaying && paragraphs.length > 0) {
+                        // 开始新的朗读
                         startReading();
                     }
                 });
                 navigator.mediaSession.setActionHandler('pause', function() {
+                    console.log('MediaSession: pause clicked');
                     if (isPlaying) {
                         isPaused = true; isPlaying = false;
-                        speechSynthesis.pause();
+                        speechSynthesis.cancel(); // 使用cancel而不是pause，更可靠
+                        stopBackgroundAudio();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                         updateMediaSession();
                     }
                 });
-                navigator.mediaSession.setActionHandler('previoustrack', function() { prevChapter(); });
-                navigator.mediaSession.setActionHandler('nexttrack', function() { nextChapter(); });
+                navigator.mediaSession.setActionHandler('previoustrack', function() { 
+                    console.log('MediaSession: previoustrack clicked');
+                    prevChapter(); 
+                });
+                navigator.mediaSession.setActionHandler('nexttrack', function() { 
+                    console.log('MediaSession: nexttrack clicked');
+                    nextChapter(); 
+                });
             }
         }
         
@@ -362,17 +374,21 @@
         
         function togglePlayPause() {
             if (isPlaying) {
+                // 暂停
                 isPaused = true; isPlaying = false;
-                speechSynthesis.pause();
+                speechSynthesis.cancel();
+                stopBackgroundAudio();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 updateMediaSession();
             } else if (isPaused) {
+                // 从暂停恢复
                 isPaused = false; isPlaying = true;
-                speechSynthesis.resume();
                 startBackgroundAudio();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
                 updateMediaSession();
+                readParagraph(currentParagraphIndex);
             } else {
+                // 开始新的朗读
                 if (currentFileIndex < 0 && files.length) selectFile(0);
                 if (paragraphs.length) startReading();
             }

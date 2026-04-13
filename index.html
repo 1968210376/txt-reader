@@ -85,10 +85,11 @@
         .tips { background: #1e3a5f; color: #7ec8e3; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
         .voice-status { font-size: 0.8rem; margin-left: 10px; }
         .voice-status.online { color: #00ff88; }
-        .voice-status.offline { color: #ff9800; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1a1a2e; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        
+        .loading { color: #ff9800; }
     </style>
 </head>
 <body>
@@ -142,110 +143,134 @@
         <div class="card">
             <div class="settings">
                 <div class="setting-group">
-                    <div class="setting-label">语音选择 <span id="voiceStatus" class="voice-status"></span></div>
-                    <select id="voiceSelect"></select>
+                    <div class="setting-label">语音选择 <span id="voiceStatus" class="voice-status online">[在线]</span></div>
+                    <select id="voiceSelect">
+                        <option value="xiaoyun">晓云 (女声)</option>
+                        <option value="xiaoyu">小宇 (男声)</option>
+                        <option value="xiaoya">晓雅 (女声)</option>
+                        <option value="dazhi">大哲 (男声)</option>
+                    </select>
                 </div>
                 <div class="setting-group">
                     <div class="setting-label">语速: <span id="rateValue">1.0x</span></div>
                     <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1">
                 </div>
-                <div class="setting-group">
-                    <div class="setting-label">音调: <span id="pitchValue">1.0</span></div>
-                    <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1">
-                </div>
             </div>
         </div>
         
         <div class="status-bar" id="statusBar">就绪</div>
-        <div class="tips">提示：点击进度条或段落可跳转。推荐使用Edge浏览器获得最佳语音效果。</div>
+        <div class="tips">提示：支持后台播放、锁屏播放、耳机控制。点击进度条或段落可跳转。</div>
     </div>
 
     <script>
         let files = [], currentFileIndex = -1, currentContent = '', isPlaying = false, isPaused = false;
-        let speechSynthesis = window.speechSynthesis, currentUtterance = null, voices = [];
         let paragraphs = [], currentParagraphIndex = 0;
-        let currentVoiceIndex = -1;
+        let audio = null;
+        let isLoading = false;
         
-        // 音频上下文（用于保持后台播放）
-        let audioContext = null;
-        let keepAwakeInterval = null;
+        // 有道TTS API
+        const YOUDAO_TTS_URL = 'https://tts.youdao.com/fanyivoice';
         
         // 缓存相关
         const CACHE_KEY = 'txt_reader_cache';
         let cachedData = null;
         
-        // 常用中文语音名称（用于匹配）
-        const PREFERRED_VOICES = [
-            { name: 'xiaoxiao', label: '晓晓(女声)', type: 'online' },
-            { name: 'yunxi', label: '云希(男声)', type: 'online' },
-            { name: 'huihui', label: 'Huihui(女声)', type: 'local' },
-            { name: 'kangkang', label: 'Kangkang(男声)', type: 'local' },
-            { name: 'yaoyao', label: 'Yaoyao(女声)', type: 'local' },
-            { name: 'chinese', label: '中文语音', type: 'auto' },
-        ];
-        
         document.addEventListener('DOMContentLoaded', function() {
-            loadVoices();
-            loadCache(); // 加载缓存
-            initMediaSession(); // 初始化锁屏播放控制
+            loadCache();
+            initMediaSession();
             document.getElementById('folderInput').addEventListener('change', handleFileSelect);
             document.getElementById('fileInput').addEventListener('change', handleFileSelect);
             document.getElementById('rateSlider').addEventListener('input', function() { 
                 document.getElementById('rateValue').textContent = this.value + 'x';
                 saveCache();
             });
-            document.getElementById('pitchSlider').addEventListener('input', function() { 
-                document.getElementById('pitchValue').textContent = this.value;
-                saveCache();
-            });
+            document.getElementById('voiceSelect').addEventListener('change', saveCache);
         });
         
-        // ========== 后台播放保持 ==========
-        function initAudioContext() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+        // ========== 有道 TTS ==========
+        function getTTSUrl(text, voice, rate) {
+            const voiceMap = {
+                'xiaoyun': 'xiaoyun',
+                'xiaoyu': 'xiaoyu',
+                'xiaoya': 'xiaoya',
+                'dazhi': 'dazhi'
+            };
+            const v = voiceMap[voice] || 'xiaoyun';
+            // 有道TTS API
+            return `${YOUDAO_TTS_URL}?word=${encodeURIComponent(text)}&le=zh&keyfrom=speaker-target&voice=${v}&rate=${Math.round(rate * 100)}`;
         }
         
-        function startKeepAwake() {
-            initAudioContext();
-            // 定期触发以保持播放状态
-            if (keepAwakeInterval) clearInterval(keepAwakeInterval);
-            keepAwakeInterval = setInterval(function() {
-                if (isPlaying && audioContext) {
-                    // 创建一个静音的振荡器来保持音频上下文活跃
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    gainNode.gain.value = 0; // 静音
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    oscillator.start();
-                    oscillator.stop(audioContext.currentTime + 0.1);
+        function speakParagraph(index) {
+            if (index < 0 || index >= paragraphs.length) return;
+            
+            const text = paragraphs[index].trim();
+            if (!text) {
+                currentParagraphIndex++;
+                if (isPlaying && !isPaused) speakParagraph(currentParagraphIndex);
+                return;
+            }
+            
+            const voice = document.getElementById('voiceSelect').value;
+            const rate = parseFloat(document.getElementById('rateSlider').value);
+            const url = getTTSUrl(text, voice, rate);
+            
+            isLoading = true;
+            document.getElementById('statusBar').innerHTML = `<span class="loading">加载中...</span>`;
+            
+            if (audio) {
+                audio.pause();
+                audio.src = '';
+            }
+            
+            audio = new Audio(url);
+            audio.playbackRate = 1;
+            
+            audio.oncanplaythrough = function() {
+                isLoading = false;
+                audio.play();
+                displayKaraoke(index);
+                updateProgress(index + 1, paragraphs.length);
+                updateMediaSession(files[currentFileIndex]?.name || '朗读中', true);
+                document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
+            };
+            
+            audio.onended = function() {
+                currentParagraphIndex++;
+                saveCache();
+                if (isPlaying && !isPaused) {
+                    speakParagraph(currentParagraphIndex);
+                } else if (currentParagraphIndex >= paragraphs.length) {
+                    onReadingComplete();
                 }
-            }, 15000); // 每15秒
+            };
+            
+            audio.onerror = function(e) {
+                console.error('TTS Error:', e);
+                isLoading = false;
+                document.getElementById('statusBar').textContent = '语音加载失败，尝试下一段...';
+                currentParagraphIndex++;
+                if (isPlaying && !isPaused) speakParagraph(currentParagraphIndex);
+            };
+            
+            audio.load();
         }
         
-        function stopKeepAwake() {
-            if (keepAwakeInterval) {
-                clearInterval(keepAwakeInterval);
-                keepAwakeInterval = null;
+        function stopAudio() {
+            if (audio) {
+                audio.pause();
+                audio.src = '';
             }
         }
-        // ========== 后台播放保持结束 ==========
+        // ========== 有道 TTS 结束 ==========
         
-        // ========== 锁屏播放控制 ==========
+        // ========== Media Session ==========
         function initMediaSession() {
             if ('mediaSession' in navigator) {
-                // 播放
                 navigator.mediaSession.setActionHandler('play', function() {
-                    console.log('MediaSession: play');
                     if (isPaused) {
                         isPaused = false;
                         isPlaying = true;
-                        speechSynthesis.resume();
+                        if (audio) audio.play();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
                         updateMediaSession(files[currentFileIndex]?.name || '', true);
                     } else if (!isPlaying) {
@@ -253,45 +278,31 @@
                     }
                 });
                 
-                // 暂停
                 navigator.mediaSession.setActionHandler('pause', function() {
-                    console.log('MediaSession: pause');
                     if (isPlaying) {
                         isPaused = true;
                         isPlaying = false;
-                        speechSynthesis.pause();
+                        if (audio) audio.pause();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                         updateMediaSession(files[currentFileIndex]?.name || '', false);
                     }
                 });
                 
-                // 上一章
                 navigator.mediaSession.setActionHandler('previoustrack', function() {
-                    console.log('MediaSession: previoustrack');
-                    if (currentFileIndex > 0) {
-                        prevChapter();
-                    }
+                    prevChapter();
                 });
                 
-                // 下一章
                 navigator.mediaSession.setActionHandler('nexttrack', function() {
-                    console.log('MediaSession: nexttrack');
-                    if (currentFileIndex < files.length - 1) {
-                        nextChapter();
-                    }
+                    nextChapter();
                 });
                 
-                // 后退10秒（改为上一段）
-                navigator.mediaSession.setActionHandler('seekbackward', function(event) {
-                    console.log('MediaSession: seekbackward');
+                navigator.mediaSession.setActionHandler('seekbackward', function() {
                     if (currentParagraphIndex > 0) {
                         jumpToParagraph(currentParagraphIndex - 1);
                     }
                 });
                 
-                // 前进10秒（改为下一段）
-                navigator.mediaSession.setActionHandler('seekforward', function(event) {
-                    console.log('MediaSession: seekforward');
+                navigator.mediaSession.setActionHandler('seekforward', function() {
                     if (currentParagraphIndex < paragraphs.length - 1) {
                         jumpToParagraph(currentParagraphIndex + 1);
                     }
@@ -312,169 +323,32 @@
                 navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
             }
         }
-        // ========== 锁屏播放控制结束 ==========
-        
-        function loadVoices() {
-            voices = speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                populateVoiceSelect();
-            }
-            // 总是监听voiceschanged事件
-            speechSynthesis.onvoiceschanged = function() {
-                voices = speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    populateVoiceSelect();
-                }
-            };
-        }
-        
-        function populateVoiceSelect() {
-            const select = document.getElementById('voiceSelect');
-            
-            if (voices.length === 0) {
-                select.innerHTML = '<option value="-1">系统默认语音</option>';
-                currentVoiceIndex = -1;
-                return;
-            }
-            
-            select.innerHTML = '';
-            
-            // 分类语音：在线和本地
-            let onlineVoices = [];
-            let localVoices = [];
-            
-            voices.forEach((voice, i) => {
-                const lang = voice.lang.toLowerCase();
-                const name = voice.name.toLowerCase();
-                
-                // 只保留中文语音
-                if (lang.includes('zh') || lang.includes('cn') || lang.includes('chinese')) {
-                    const voiceInfo = {
-                        index: i,
-                        name: voice.name,
-                        isLocal: voice.localService
-                    };
-                    
-                    if (voice.localService) {
-                        localVoices.push(voiceInfo);
-                    } else {
-                        onlineVoices.push(voiceInfo);
-                    }
-                }
-            });
-            
-            // 添加在线语音（优先）
-            if (onlineVoices.length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = '在线语音 (需联网)';
-                onlineVoices.forEach(v => {
-                    const option = document.createElement('option');
-                    option.value = v.index;
-                    option.textContent = v.name;
-                    optgroup.appendChild(option);
-                });
-                select.appendChild(optgroup);
-                
-                // 默认选择xiaoxiao
-                const xiaoxiaoVoice = onlineVoices.find(v => v.name.toLowerCase().includes('xiaoxiao'));
-                if (xiaoxiaoVoice) {
-                    currentVoiceIndex = xiaoxiaoVoice.index;
-                } else {
-                    currentVoiceIndex = onlineVoices[0].index;
-                }
-                select.value = currentVoiceIndex;
-                updateVoiceStatus(true);
-            }
-            
-            // 添加本地语音
-            if (localVoices.length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = '本地语音 (离线可用)';
-                localVoices.forEach(v => {
-                    const option = document.createElement('option');
-                    option.value = v.index;
-                    option.textContent = v.name;
-                    optgroup.appendChild(option);
-                });
-                select.appendChild(optgroup);
-                
-                // 如果没有在线语音，默认选择第一个本地语音
-                if (onlineVoices.length === 0) {
-                    currentVoiceIndex = localVoices[0].index;
-                    select.value = currentVoiceIndex;
-                    updateVoiceStatus(false);
-                }
-            }
-            
-            // 如果没有中文语音，添加所有语音
-            if (onlineVoices.length === 0 && localVoices.length === 0) {
-                voices.forEach((voice, i) => {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = voice.name + ' (' + voice.lang + ')';
-                    select.appendChild(option);
-                });
-                currentVoiceIndex = 0;
-                updateVoiceStatus(false);
-            }
-            
-            select.addEventListener('change', function() {
-                currentVoiceIndex = parseInt(this.value);
-                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                    const voice = voices[currentVoiceIndex];
-                    updateVoiceStatus(!voice.localService);
-                }
-            });
-        }
-        
-        function updateVoiceStatus(isOnline) {
-            const status = document.getElementById('voiceStatus');
-            if (isOnline) {
-                status.textContent = '[在线]';
-                status.className = 'voice-status online';
-            } else {
-                status.textContent = '[本地]';
-                status.className = 'voice-status offline';
-            }
-        }
+        // ========== Media Session 结束 ==========
         
         // ========== 缓存功能 ==========
         function saveCache() {
             if (files.length === 0) return;
             
-            // 异步保存所有文件内容
-            const promises = files.map((f, i) => {
-                if (f.text) {
-                    return f.text().then(content => {
-                        return { name: f.name, content: content };
-                    });
-                }
-                return Promise.resolve({ name: f.name, content: f.content || null });
+            const cacheData = {
+                files: files.map(f => ({ name: f.name })),
+                allContents: {},
+                currentFileIndex: currentFileIndex,
+                currentParagraphIndex: currentParagraphIndex,
+                currentContent: currentContent,
+                rate: document.getElementById('rateSlider').value,
+                voice: document.getElementById('voiceSelect').value,
+                timestamp: Date.now()
+            };
+            
+            files.forEach(f => {
+                if (f.content) cacheData.allContents[f.name] = f.content;
             });
             
-            Promise.all(promises).then(results => {
-                const allContents = {};
-                results.forEach(r => {
-                    if (r.content) allContents[r.name] = r.content;
-                });
-                
-                const cacheData = {
-                    files: files.map(f => ({ name: f.name })),
-                    allContents: allContents,
-                    currentFileIndex: currentFileIndex,
-                    currentParagraphIndex: currentParagraphIndex,
-                    currentContent: currentContent,
-                    rate: document.getElementById('rateSlider').value,
-                    pitch: document.getElementById('pitchSlider').value,
-                    timestamp: Date.now()
-                };
-                
-                try {
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-                } catch(e) {
-                    console.log('缓存保存失败', e);
-                }
-            });
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+            } catch(e) {
+                console.log('缓存保存失败', e);
+            }
         }
         
         function loadCache() {
@@ -483,17 +357,14 @@
                 if (saved) {
                     cachedData = JSON.parse(saved);
                     
-                    // 恢复语速和音调
                     if (cachedData.rate) {
                         document.getElementById('rateSlider').value = cachedData.rate;
                         document.getElementById('rateValue').textContent = cachedData.rate + 'x';
                     }
-                    if (cachedData.pitch) {
-                        document.getElementById('pitchSlider').value = cachedData.pitch;
-                        document.getElementById('pitchValue').textContent = cachedData.pitch;
+                    if (cachedData.voice) {
+                        document.getElementById('voiceSelect').value = cachedData.voice;
                     }
                     
-                    // 显示恢复提示
                     if (cachedData.files && cachedData.files.length > 0) {
                         showCachePrompt();
                     }
@@ -524,7 +395,6 @@
         function restoreCache() {
             if (!cachedData) return;
             
-            // 恢复文件列表，包含内容
             files = cachedData.files.map(f => ({
                 name: f.name,
                 content: cachedData.allContents ? cachedData.allContents[f.name] : null
@@ -533,17 +403,12 @@
             currentFileIndex = cachedData.currentFileIndex;
             currentParagraphIndex = cachedData.currentParagraphIndex;
             
-            // 恢复当前内容（确保与currentFileIndex对应）
             if (cachedData.allContents && cachedData.files[currentFileIndex]) {
                 const currentFileName = cachedData.files[currentFileIndex].name;
                 currentContent = cachedData.allContents[currentFileName] || cachedData.currentContent || '';
                 paragraphs = currentContent.split('\n').filter(p => p.trim());
-            } else if (cachedData.currentContent) {
-                currentContent = cachedData.currentContent;
-                paragraphs = currentContent.split('\n').filter(p => p.trim());
             }
             
-            // 更新文件列表显示
             const fileList = document.getElementById('fileList');
             fileList.innerHTML = '';
             cachedData.files.forEach((f, index) => {
@@ -554,7 +419,6 @@
                 fileList.appendChild(div);
             });
             
-            // 显示内容
             displayKaraoke(currentParagraphIndex);
             updateProgress(currentParagraphIndex + 1, paragraphs.length);
             document.getElementById('statusBar').textContent = `已恢复: ${cachedData.files[currentFileIndex].name} - 第 ${currentParagraphIndex + 1} 段`;
@@ -576,8 +440,6 @@
                 document.getElementById('statusBar').textContent = `当前: ${cachedFile.name}`;
                 updateProgress(0, paragraphs.length);
                 saveCache();
-            } else {
-                document.getElementById('statusBar').textContent = '请重新选择文件夹以切换章节';
             }
         }
         
@@ -598,7 +460,6 @@
             if (selected.length > 0) {
                 files = selected.sort((a, b) => a.name.localeCompare(b.name));
                 updateFileList();
-                // 清除旧缓存，准备新缓存
                 clearCache();
             } else {
                 document.getElementById('statusBar').textContent = '未找到txt文件';
@@ -621,16 +482,16 @@
         
         function selectFile(index) {
             currentFileIndex = index;
-            currentParagraphIndex = 0; // 重置段落索引
+            currentParagraphIndex = 0;
             document.querySelectorAll('.file-item').forEach((item, i) => { item.classList.toggle('active', i === index); });
             const reader = new FileReader();
             reader.onload = function(e) {
                 currentContent = e.target.result;
                 paragraphs = currentContent.split('\n').filter(p => p.trim());
+                files[index].content = currentContent;
                 displayKaraoke(-1);
                 document.getElementById('statusBar').textContent = `当前: ${files[index].name}`;
                 updateProgress(0, paragraphs.length);
-                // 保存缓存
                 saveCache();
             };
             reader.readAsText(files[index], 'UTF-8');
@@ -662,52 +523,16 @@
         function jumpToParagraph(index) {
             if (index < 0 || index >= paragraphs.length) return;
             
-            // 取消之前的语音
-            speechSynthesis.cancel();
-            
-            // 设置当前段落索引
+            stopAudio();
             currentParagraphIndex = index;
-            
-            // 立即更新高亮显示
             displayKaraoke(index);
             updateProgress(index + 1, paragraphs.length);
             
-            // 如果正在播放，从点击的段落开始朗读
             if (isPlaying || isPaused) {
                 isPaused = false;
                 isPlaying = true;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-                
-                // 直接朗读当前段落
-                const para = paragraphs[currentParagraphIndex];
-                const thisIndex = currentParagraphIndex;
-                
-                currentUtterance = new SpeechSynthesisUtterance(para);
-                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                    currentUtterance.voice = voices[currentVoiceIndex];
-                }
-                currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
-                currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
-                
-                currentUtterance.onstart = function() {
-                    displayKaraoke(thisIndex);
-                    updateProgress(thisIndex + 1, paragraphs.length);
-                };
-                
-                currentUtterance.onend = function() {
-                    currentParagraphIndex++;
-                    if (isPlaying && !isPaused) readNextParagraph();
-                };
-                
-                currentUtterance.onerror = function(e) {
-                    if (e.error === 'network' || e.error === 'not-allowed') {
-                        fallbackToLocalVoice();
-                    }
-                    currentParagraphIndex++;
-                    if (isPlaying && !isPaused) readNextParagraph();
-                };
-                
-                speechSynthesis.speak(currentUtterance);
+                speakParagraph(currentParagraphIndex);
             }
         }
         
@@ -730,133 +555,56 @@
         
         function togglePlayPause() {
             if (isPlaying) {
-                isPaused = true; isPlaying = false;
-                speechSynthesis.pause();
+                isPaused = true;
+                isPlaying = false;
+                if (audio) audio.pause();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 document.getElementById('statusBar').textContent = '已暂停';
                 updateMediaSession(files[currentFileIndex]?.name || '', false);
             } else if (isPaused) {
-                isPaused = false; isPlaying = true;
-                speechSynthesis.resume();
+                isPaused = false;
+                isPlaying = true;
+                if (audio) audio.play();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
                 document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
                 updateMediaSession(files[currentFileIndex]?.name || '', true);
             } else {
                 if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                // 只有在没有恢复进度时才重置段落索引
-                if (paragraphs.length === 0) {
-                    currentParagraphIndex = 0;
-                }
+                if (paragraphs.length === 0) return;
                 startReading();
             }
         }
         
         function startReading() {
-            if (!paragraphs.length) { document.getElementById('statusBar').textContent = '请先选择文件'; return; }
-            speechSynthesis.cancel();
+            if (!paragraphs.length) { 
+                document.getElementById('statusBar').textContent = '请先选择文件'; 
+                return; 
+            }
+            stopAudio();
             
-            initAudioContext();
-            startKeepAwake();
-            
-            isPlaying = true; isPaused = false;
+            isPlaying = true;
+            isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
             document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
             updateMediaSession(files[currentFileIndex]?.name || '', true);
-            readNextParagraph();
-        }
-        
-        function readNextParagraph() {
-            if (!isPlaying || currentParagraphIndex >= paragraphs.length) {
-                if (currentParagraphIndex >= paragraphs.length) onReadingComplete();
-                return;
-            }
-            if (isPaused) return;
-            
-            const para = paragraphs[currentParagraphIndex];
-            const thisIndex = currentParagraphIndex;
-            
-            currentUtterance = new SpeechSynthesisUtterance(para);
-            
-            // 使用当前选择的语音
-            if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                currentUtterance.voice = voices[currentVoiceIndex];
-            }
-            
-            currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
-            currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
-            
-            // 在语音实际开始播放时才更新高亮
-            currentUtterance.onstart = function() {
-                displayKaraoke(thisIndex);
-                updateProgress(thisIndex + 1, paragraphs.length);
-                
-                // 移动端：语音开始播放后持续尝试获取语音列表
-                if (voices.length === 0) {
-                    const checkVoices = setInterval(function() {
-                        const newVoices = speechSynthesis.getVoices();
-                        if (newVoices.length > 0) {
-                            voices = newVoices;
-                            populateVoiceSelect();
-                            clearInterval(checkVoices);
-                        }
-                    }, 200);
-                    // 3秒后停止检查
-                    setTimeout(function() { clearInterval(checkVoices); }, 3000);
-                }
-            };
-            
-            currentUtterance.onend = function() {
-                // 先保存当前进度，再加1
-                const completedIndex = currentParagraphIndex;
-                currentParagraphIndex++;
-                saveCache();
-                if (isPlaying && !isPaused) readNextParagraph();
-            };
-            
-            currentUtterance.onerror = function(e) {
-                // 如果在线语音失败，尝试切换到本地语音
-                if (e.error === 'network' || e.error === 'not-allowed') {
-                    fallbackToLocalVoice();
-                }
-                currentParagraphIndex++;
-                if (isPlaying && !isPaused) readNextParagraph();
-            };
-            
-            speechSynthesis.speak(currentUtterance);
-        }
-        
-        function fallbackToLocalVoice() {
-            // 查找本地语音
-            for (let i = 0; i < voices.length; i++) {
-                if (voices[i].localService && 
-                    (voices[i].lang.toLowerCase().includes('zh') || voices[i].lang.toLowerCase().includes('cn'))) {
-                    currentVoiceIndex = i;
-                    document.getElementById('voiceSelect').value = i;
-                    updateVoiceStatus(false);
-                    document.getElementById('statusBar').textContent = '网络不可用，已切换到本地语音';
-                    break;
-                }
-            }
+            speakParagraph(currentParagraphIndex);
         }
         
         function onReadingComplete() {
-            stopKeepAwake();
-            
-            isPlaying = false; isPaused = false;
+            isPlaying = false;
+            isPaused = false;
+            stopAudio();
             document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
             displayKaraoke(-1);
             updateProgress(paragraphs.length, paragraphs.length);
             updateMediaSession('', false);
             
-            // 自动播放下一章
             if (currentFileIndex < files.length - 1) {
                 document.getElementById('statusBar').textContent = '本章节朗读完成，自动播放下一章...';
                 setTimeout(function() {
-                    if (!isPlaying) { // 确保用户没有手动操作
+                    if (!isPlaying) {
                         nextChapter();
-                        setTimeout(function() {
-                            startReading();
-                        }, 500);
+                        setTimeout(startReading, 500);
                     }
                 }, 1000);
             } else {
@@ -865,21 +613,27 @@
         }
         
         function prevChapter() {
-            if (currentFileIndex > 0) { 
-                speechSynthesis.cancel();
-                isPlaying = false; isPaused = false;
+            if (currentFileIndex > 0) {
+                stopAudio();
+                isPlaying = false;
+                isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectCachedFile(currentFileIndex - 1);
-            } else { document.getElementById('statusBar').textContent = '已经是第一章了'; }
+            } else {
+                document.getElementById('statusBar').textContent = '已经是第一章了';
+            }
         }
         
         function nextChapter() {
-            if (currentFileIndex < files.length - 1) { 
-                speechSynthesis.cancel();
-                isPlaying = false; isPaused = false;
+            if (currentFileIndex < files.length - 1) {
+                stopAudio();
+                isPlaying = false;
+                isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectCachedFile(currentFileIndex + 1);
-            } else { document.getElementById('statusBar').textContent = '已经是最后一章了'; }
+            } else {
+                document.getElementById('statusBar').textContent = '已经是最后一章了';
+            }
         }
     </script>
 </body>

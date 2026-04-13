@@ -166,6 +166,10 @@
         let paragraphs = [], currentParagraphIndex = 0;
         let currentVoiceIndex = -1;
         
+        // 音频上下文（用于保持后台播放）
+        let audioContext = null;
+        let keepAwakeInterval = null;
+        
         // 缓存相关
         const CACHE_KEY = 'txt_reader_cache';
         let cachedData = null;
@@ -196,41 +200,116 @@
             });
         });
         
+        // ========== 后台播放保持 ==========
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+        
+        function startKeepAwake() {
+            initAudioContext();
+            // 定期触发以保持播放状态
+            if (keepAwakeInterval) clearInterval(keepAwakeInterval);
+            keepAwakeInterval = setInterval(function() {
+                if (isPlaying && audioContext) {
+                    // 创建一个静音的振荡器来保持音频上下文活跃
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    gainNode.gain.value = 0; // 静音
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                }
+            }, 15000); // 每15秒
+        }
+        
+        function stopKeepAwake() {
+            if (keepAwakeInterval) {
+                clearInterval(keepAwakeInterval);
+                keepAwakeInterval = null;
+            }
+        }
+        // ========== 后台播放保持结束 ==========
+        
         // ========== 锁屏播放控制 ==========
         function initMediaSession() {
             if ('mediaSession' in navigator) {
+                // 播放
                 navigator.mediaSession.setActionHandler('play', function() {
-                    if (!isPlaying && !isPaused) {
-                        togglePlayPause();
-                    } else if (isPaused) {
+                    console.log('MediaSession: play');
+                    if (isPaused) {
+                        isPaused = false;
+                        isPlaying = true;
+                        speechSynthesis.resume();
+                        document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
+                        updateMediaSession(files[currentFileIndex]?.name || '', true);
+                    } else if (!isPlaying) {
                         togglePlayPause();
                     }
                 });
                 
+                // 暂停
                 navigator.mediaSession.setActionHandler('pause', function() {
+                    console.log('MediaSession: pause');
                     if (isPlaying) {
-                        togglePlayPause();
+                        isPaused = true;
+                        isPlaying = false;
+                        speechSynthesis.pause();
+                        document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
+                        updateMediaSession(files[currentFileIndex]?.name || '', false);
                     }
                 });
                 
+                // 上一章
                 navigator.mediaSession.setActionHandler('previoustrack', function() {
-                    prevChapter();
+                    console.log('MediaSession: previoustrack');
+                    if (currentFileIndex > 0) {
+                        prevChapter();
+                    }
                 });
                 
+                // 下一章
                 navigator.mediaSession.setActionHandler('nexttrack', function() {
-                    nextChapter();
+                    console.log('MediaSession: nexttrack');
+                    if (currentFileIndex < files.length - 1) {
+                        nextChapter();
+                    }
+                });
+                
+                // 后退10秒（改为上一段）
+                navigator.mediaSession.setActionHandler('seekbackward', function(event) {
+                    console.log('MediaSession: seekbackward');
+                    if (currentParagraphIndex > 0) {
+                        jumpToParagraph(currentParagraphIndex - 1);
+                    }
+                });
+                
+                // 前进10秒（改为下一段）
+                navigator.mediaSession.setActionHandler('seekforward', function(event) {
+                    console.log('MediaSession: seekforward');
+                    if (currentParagraphIndex < paragraphs.length - 1) {
+                        jumpToParagraph(currentParagraphIndex + 1);
+                    }
                 });
             }
         }
         
-        function updateMediaSession(title, isPlaying) {
+        function updateMediaSession(title, playing) {
             if ('mediaSession' in navigator) {
+                const fileName = files[currentFileIndex]?.name || '未知章节';
+                const progress = `${currentParagraphIndex + 1}/${paragraphs.length}段`;
+                
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: title || 'TXT小说朗读',
-                    artist: '朗读工具',
-                    album: files[currentFileIndex]?.name || '小说',
+                    title: fileName,
+                    artist: 'TXT小说朗读',
+                    album: progress,
                 });
-                navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+                navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
             }
         }
         // ========== 锁屏播放控制结束 ==========
@@ -676,6 +755,9 @@
             if (!paragraphs.length) { document.getElementById('statusBar').textContent = '请先选择文件'; return; }
             speechSynthesis.cancel();
             
+            initAudioContext();
+            startKeepAwake();
+            
             isPlaying = true; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
             document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
@@ -758,6 +840,8 @@
         }
         
         function onReadingComplete() {
+            stopKeepAwake();
+            
             isPlaying = false; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
             displayKaraoke(-1);

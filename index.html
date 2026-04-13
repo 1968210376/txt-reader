@@ -92,27 +92,19 @@
         let files = [], currentFileIndex = -1, currentContent = '', isPlaying = false, isPaused = false;
         let speechSynthesis = window.speechSynthesis, currentUtterance = null, voices = [];
         let paragraphs = [], currentParagraphIndex = 0, currentVoiceIndex = -1;
+        let silentAudioEl = null; // 后台播放用的音频
         
-        // 后台播放用的音频
-        let silentAudioEl = null;
-        
-        const CACHE_KEY = 'txt_reader_cache';
-        let cachedData = null;
-
         document.addEventListener('DOMContentLoaded', function() {
             loadVoices();
-            loadCache();
             initMediaSession();
             document.getElementById('folderInput').addEventListener('change', handleFileSelect);
             document.getElementById('fileInput').addEventListener('change', handleFileSelect);
             document.getElementById('rateSlider').addEventListener('input', function() { 
                 document.getElementById('rateValue').textContent = this.value + 'x';
-                saveCache();
             });
         });
-
+        
         // ========== 后台播放保持 ==========
-        let silentAudioEl = null;
         
         function startBackgroundAudio() {
             if (!silentAudioEl) {

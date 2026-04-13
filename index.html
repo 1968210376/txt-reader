@@ -17,12 +17,7 @@
         .card-title { font-size: 1rem; color: #888; margin-bottom: 10px; font-weight: 600; }
         
         .file-btn-group { display: flex; gap: 10px; }
-        .file-btn {
-            flex: 1; padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; border-radius: 10px;
-            font-size: 1rem; cursor: pointer;
-        }
+        .file-btn { flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; }
         .file-btn:active { transform: scale(0.98); }
         input[type="file"] { display: none; }
         
@@ -33,45 +28,22 @@
         .file-item.active { background: #667eea30; border-left: 3px solid #667eea; color: #fff; }
         .file-name { font-size: 0.95rem; }
         
-        .karaoke-container {
-            background: #0d0d1a; border-radius: 10px; padding: 20px;
-            min-height: 300px; max-height: 400px; overflow-y: auto;
-        }
-        .karaoke-paragraph {
-            padding: 12px 0; margin: 8px 0;
-            font-size: 1.1rem; line-height: 1.8;
-            color: #666; border-radius: 8px;
-            transition: all 0.3s ease; cursor: pointer;
-        }
+        .karaoke-container { background: #0d0d1a; border-radius: 10px; padding: 20px; min-height: 300px; max-height: 400px; overflow-y: auto; }
+        .karaoke-paragraph { padding: 12px 0; margin: 8px 0; font-size: 1.1rem; line-height: 1.8; color: #666; border-radius: 8px; transition: all 0.3s ease; cursor: pointer; }
         .karaoke-paragraph:hover { background: #1a1a2e; }
-        .karaoke-paragraph.active {
-            color: #00ff88; font-size: 1.2rem;
-            background: linear-gradient(90deg, #667eea20, #00ff8820);
-            padding: 15px; margin: 12px 0;
-            box-shadow: 0 0 20px rgba(0,255,136,0.2);
-        }
+        .karaoke-paragraph.active { color: #00ff88; font-size: 1.2rem; background: linear-gradient(90deg, #667eea20, #00ff8820); padding: 15px; margin: 12px 0; box-shadow: 0 0 20px rgba(0,255,136,0.2); }
         .karaoke-paragraph.read { color: #555; }
         
         .control-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .ctrl-btn {
-            padding: 18px 10px; border: none; border-radius: 12px;
-            font-size: 1rem; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
-        }
+        .ctrl-btn { padding: 18px 10px; border: none; border-radius: 12px; font-size: 1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .ctrl-btn .icon { font-size: 1.8rem; }
         .btn-prev, .btn-next { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; }
         .btn-play { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; }
         
         .progress-container { margin-bottom: 15px; }
-        .progress-bar { 
-            height: 20px; background: #333; border-radius: 10px; overflow: hidden; 
-            cursor: pointer; position: relative;
-        }
+        .progress-bar { height: 20px; background: #333; border-radius: 10px; overflow: hidden; cursor: pointer; position: relative; }
         .progress-bar:hover { background: #444; }
-        .progress-fill { 
-            height: 100%; background: linear-gradient(90deg, #667eea 0%, #00ff88 100%); 
-            width: 0%; transition: width 0.1s; pointer-events: none;
-        }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #00ff88 100%); width: 0%; transition: width 0.1s; pointer-events: none; }
         .progress-text { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.85rem; color: #888; }
         
         .settings { display: flex; flex-direction: column; gap: 15px; }
@@ -83,12 +55,10 @@
         
         .status-bar { background: #2a2a40; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; color: #888; text-align: center; }
         .tips { background: #1e3a5f; color: #7ec8e3; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
-        .voice-status { font-size: 0.8rem; margin-left: 10px; }
-        .voice-status.online { color: #00ff88; }
-        .voice-status.offline { color: #ff9800; }
+        .voice-status { font-size: 0.8rem; margin-left: 10px; color: #00ff88; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1a1a2e; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -142,40 +112,36 @@
         <div class="card">
             <div class="settings">
                 <div class="setting-group">
-                    <div class="setting-label">语音选择 <span id="voiceStatus" class="voice-status"></span></div>
-                    <select id="voiceSelect"></select>
+                    <div class="setting-label">语音选择 <span id="voiceStatus" class="voice-status">[在线TTS]</span></div>
+                    <select id="voiceSelect">
+                        <option value="zh-CN-XiaoxiaoNeural">晓晓 (女声)</option>
+                        <option value="zh-CN-YunxiNeural">云希 (男声)</option>
+                        <option value="zh-CN-XiaoyiNeural">晓伊 (女声)</option>
+                        <option value="zh-CN-YunjianNeural">云健 (男声)</option>
+                    </select>
                 </div>
                 <div class="setting-group">
                     <div class="setting-label">语速: <span id="rateValue">1.0x</span></div>
                     <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1">
                 </div>
-                <div class="setting-group">
-                    <div class="setting-label">音调: <span id="pitchValue">1.0</span></div>
-                    <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1">
-                </div>
             </div>
         </div>
         
         <div class="status-bar" id="statusBar">就绪</div>
-        <div class="tips">提示：点击进度条或段落可跳转。推荐使用Edge浏览器获得最佳语音效果。</div>
+        <div class="tips">提示：支持后台播放、锁屏播放、耳机控制。需要联网使用。</div>
     </div>
 
     <script>
         let files = [], currentFileIndex = -1, currentContent = '', isPlaying = false, isPaused = false;
-        let speechSynthesis = window.speechSynthesis, currentUtterance = null, voices = [];
         let paragraphs = [], currentParagraphIndex = 0;
-        let currentVoiceIndex = -1;
+        let audio = null;
+        let audioQueue = [];
+        let isProcessingQueue = false;
         
-        // 音频上下文（用于保持后台播放）
-        let audioContext = null;
-        let silentAudio = null;
-        
-        // 缓存相关
         const CACHE_KEY = 'txt_reader_cache';
         let cachedData = null;
         
         document.addEventListener('DOMContentLoaded', function() {
-            loadVoices();
             loadCache();
             initMediaSession();
             document.getElementById('folderInput').addEventListener('change', handleFileSelect);
@@ -184,39 +150,140 @@
                 document.getElementById('rateValue').textContent = this.value + 'x';
                 saveCache();
             });
-            document.getElementById('pitchSlider').addEventListener('input', function() { 
-                document.getElementById('pitchValue').textContent = this.value;
-                saveCache();
-            });
+            document.getElementById('voiceSelect').addEventListener('change', saveCache);
         });
         
-        // ========== 后台播放保持 ==========
-        function startSilentAudio() {
-            // 创建静音音频来保持后台播放
-            if (!silentAudio) {
-                // 创建一个极短的静音音频循环
-                silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
-                silentAudio.loop = true;
-            }
-            silentAudio.play().catch(e => console.log('静音音频播放失败', e));
+        // ========== TTS 音频生成 ==========
+        function getTTSUrl(text, voice, rate) {
+            // 使用 VoiceRSS 免费API (每日35000字符免费)
+            // 或使用 Google Translate TTS
+            const encodedText = encodeURIComponent(text);
+            const rateValue = Math.round(parseFloat(rate) * 10);
+            
+            // 使用 Google TTS (不需要API Key)
+            return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=zh-CN&client=tw-ob&ttsspeed=${rate}`;
         }
         
-        function stopSilentAudio() {
-            if (silentAudio) {
-                silentAudio.pause();
+        async function speakParagraph(index) {
+            if (index < 0 || index >= paragraphs.length) return;
+            
+            const text = paragraphs[index].trim();
+            if (!text) {
+                currentParagraphIndex++;
+                if (isPlaying && !isPaused) speakParagraph(currentParagraphIndex);
+                return;
             }
+            
+            // 如果文本太长，分段处理
+            const chunks = splitText(text, 200);
+            audioQueue = [];
+            
+            for (const chunk of chunks) {
+                const voice = document.getElementById('voiceSelect').value;
+                const rate = document.getElementById('rateSlider').value;
+                const url = getTTSUrl(chunk, voice, rate);
+                audioQueue.push(url);
+            }
+            
+            playAudioQueue(index);
         }
-        // ========== 后台播放保持结束 ==========
+        
+        function splitText(text, maxLength) {
+            const chunks = [];
+            let current = '';
+            for (let i = 0; i < text.length; i++) {
+                current += text[i];
+                if (current.length >= maxLength && /[\u3002\uff0c\uff01\uff1f\n]/.test(text[i])) {
+                    chunks.push(current.trim());
+                    current = '';
+                }
+            }
+            if (current.trim()) chunks.push(current.trim());
+            return chunks.length > 0 ? chunks : [text];
+        }
+        
+        async function playAudioQueue(paragraphIndex) {
+            if (audioQueue.length === 0) {
+                currentParagraphIndex++;
+                saveCache();
+                if (isPlaying && !isPaused) {
+                    if (currentParagraphIndex < paragraphs.length) {
+                        speakParagraph(currentParagraphIndex);
+                    } else {
+                        onReadingComplete();
+                    }
+                }
+                return;
+            }
+            
+            if (!isPlaying || isPaused) return;
+            
+            const url = audioQueue.shift();
+            
+            document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
+            
+            if (audio) {
+                audio.pause();
+                audio.src = '';
+            }
+            
+            audio = new Audio(url);
+            
+            audio.oncanplaythrough = function() {
+                displayKaraoke(paragraphIndex);
+                updateProgress(paragraphIndex + 1, paragraphs.length);
+                updateMediaSession(files[currentFileIndex]?.name || '', true);
+                audio.play().catch(e => {
+                    console.error('播放失败，尝试备用方案', e);
+                    // 备用方案：使用浏览器内置TTS
+                    fallbackToWebSpeech(paragraphIndex);
+                });
+            };
+            
+            audio.onended = function() {
+                playAudioQueue(paragraphIndex);
+            };
+            
+            audio.onerror = function(e) {
+                console.error('TTS加载失败，使用备用方案', e);
+                fallbackToWebSpeech(paragraphIndex);
+            };
+            
+            audio.load();
+        }
+        
+        // 备用方案：使用浏览器内置TTS
+        function fallbackToWebSpeech(paragraphIndex) {
+            const text = paragraphs[paragraphIndex];
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = parseFloat(document.getElementById('rateSlider').value);
+            
+            utterance.onend = function() {
+                currentParagraphIndex++;
+                saveCache();
+                if (isPlaying && !isPaused) {
+                    if (currentParagraphIndex < paragraphs.length) {
+                        speakParagraph(currentParagraphIndex);
+                    } else {
+                        onReadingComplete();
+                    }
+                }
+            };
+            
+            speechSynthesis.speak(utterance);
+            displayKaraoke(paragraphIndex);
+            updateProgress(paragraphIndex + 1, paragraphs.length);
+        }
+        // ========== TTS 结束 ==========
         
         // ========== Media Session ==========
         function initMediaSession() {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.setActionHandler('play', function() {
-                    if (isPaused) {
+                    if (isPaused && audio) {
                         isPaused = false;
                         isPlaying = true;
-                        speechSynthesis.resume();
-                        startSilentAudio();
+                        audio.play();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
                         updateMediaSession(files[currentFileIndex]?.name || '', true);
                     } else if (!isPlaying && paragraphs.length > 0) {
@@ -225,159 +292,38 @@
                 });
                 
                 navigator.mediaSession.setActionHandler('pause', function() {
-                    if (isPlaying) {
+                    if (isPlaying && audio) {
                         isPaused = true;
                         isPlaying = false;
-                        speechSynthesis.pause();
+                        audio.pause();
                         document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                         updateMediaSession(files[currentFileIndex]?.name || '', false);
                     }
                 });
                 
-                navigator.mediaSession.setActionHandler('previoustrack', function() {
-                    prevChapter();
-                });
-                
-                navigator.mediaSession.setActionHandler('nexttrack', function() {
-                    nextChapter();
-                });
-                
-                navigator.mediaSession.setActionHandler('seekbackward', function() {
-                    if (currentParagraphIndex > 0) {
-                        jumpToParagraph(currentParagraphIndex - 1);
-                    }
-                });
-                
-                navigator.mediaSession.setActionHandler('seekforward', function() {
-                    if (currentParagraphIndex < paragraphs.length - 1) {
-                        jumpToParagraph(currentParagraphIndex + 1);
-                    }
-                });
+                navigator.mediaSession.setActionHandler('previoustrack', function() { prevChapter(); });
+                navigator.mediaSession.setActionHandler('nexttrack', function() { nextChapter(); });
             }
         }
         
         function updateMediaSession(title, playing) {
             if ('mediaSession' in navigator) {
-                const fileName = files[currentFileIndex]?.name || '未知章节';
-                const progress = `${currentParagraphIndex + 1}/${paragraphs.length}段`;
-                
+                const fileName = files[currentFileIndex]?.name || '未知';
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: fileName,
                     artist: 'TXT小说朗读',
-                    album: progress,
+                    album: `第 ${currentParagraphIndex + 1}/${paragraphs.length} 段`,
                 });
                 navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
             }
         }
         // ========== Media Session 结束 ==========
         
-        function loadVoices() {
-            voices = speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                populateVoiceSelect();
-            }
-            speechSynthesis.onvoiceschanged = function() {
-                voices = speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    populateVoiceSelect();
-                }
-            };
-        }
-        
-        function populateVoiceSelect() {
-            const select = document.getElementById('voiceSelect');
-            
-            if (voices.length === 0) {
-                select.innerHTML = '<option value="-1">系统默认语音</option>';
-                currentVoiceIndex = -1;
-                return;
-            }
-            
-            select.innerHTML = '';
-            
-            let onlineVoices = [];
-            let localVoices = [];
-            
-            voices.forEach((voice, i) => {
-                const lang = voice.lang.toLowerCase();
-                if (lang.includes('zh') || lang.includes('cn') || lang.includes('chinese')) {
-                    const voiceInfo = { index: i, name: voice.name, isLocal: voice.localService };
-                    if (voice.localService) {
-                        localVoices.push(voiceInfo);
-                    } else {
-                        onlineVoices.push(voiceInfo);
-                    }
-                }
-            });
-            
-            if (onlineVoices.length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = '在线语音 (需联网)';
-                onlineVoices.forEach(v => {
-                    const option = document.createElement('option');
-                    option.value = v.index;
-                    option.textContent = v.name;
-                    optgroup.appendChild(option);
-                });
-                select.appendChild(optgroup);
-                
-                const xiaoxiaoVoice = onlineVoices.find(v => v.name.toLowerCase().includes('xiaoxiao'));
-                currentVoiceIndex = xiaoxiaoVoice ? xiaoxiaoVoice.index : onlineVoices[0].index;
-                select.value = currentVoiceIndex;
-                updateVoiceStatus(true);
-            }
-            
-            if (localVoices.length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = '本地语音 (离线可用)';
-                localVoices.forEach(v => {
-                    const option = document.createElement('option');
-                    option.value = v.index;
-                    option.textContent = v.name;
-                    optgroup.appendChild(option);
-                });
-                select.appendChild(optgroup);
-                
-                if (onlineVoices.length === 0) {
-                    currentVoiceIndex = localVoices[0].index;
-                    select.value = currentVoiceIndex;
-                    updateVoiceStatus(false);
-                }
-            }
-            
-            if (onlineVoices.length === 0 && localVoices.length === 0) {
-                voices.forEach((voice, i) => {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = voice.name + ' (' + voice.lang + ')';
-                    select.appendChild(option);
-                });
-                currentVoiceIndex = 0;
-                updateVoiceStatus(false);
-            }
-            
-            select.addEventListener('change', function() {
-                currentVoiceIndex = parseInt(this.value);
-                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                    updateVoiceStatus(!voices[currentVoiceIndex].localService);
-                }
-            });
-        }
-        
-        function updateVoiceStatus(isOnline) {
-            const status = document.getElementById('voiceStatus');
-            status.textContent = isOnline ? '[在线]' : '[本地]';
-            status.className = 'voice-status ' + (isOnline ? 'online' : 'offline');
-        }
-        
         // ========== 缓存功能 ==========
         function saveCache() {
             if (files.length === 0) return;
-            
             const allContents = {};
-            files.forEach(f => {
-                if (f.content) allContents[f.name] = f.content;
-            });
+            files.forEach(f => { if (f.content) allContents[f.name] = f.content; });
             
             const cacheData = {
                 files: files.map(f => ({ name: f.name })),
@@ -386,13 +332,10 @@
                 currentParagraphIndex: currentParagraphIndex,
                 currentContent: currentContent,
                 rate: document.getElementById('rateSlider').value,
-                pitch: document.getElementById('pitchSlider').value,
+                voice: document.getElementById('voiceSelect').value,
                 timestamp: Date.now()
             };
-            
-            try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-            } catch(e) {}
+            try { localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData)); } catch(e) {}
         }
         
         function loadCache() {
@@ -404,13 +347,8 @@
                         document.getElementById('rateSlider').value = cachedData.rate;
                         document.getElementById('rateValue').textContent = cachedData.rate + 'x';
                     }
-                    if (cachedData.pitch) {
-                        document.getElementById('pitchSlider').value = cachedData.pitch;
-                        document.getElementById('pitchValue').textContent = cachedData.pitch;
-                    }
-                    if (cachedData.files && cachedData.files.length > 0) {
-                        showCachePrompt();
-                    }
+                    if (cachedData.voice) document.getElementById('voiceSelect').value = cachedData.voice;
+                    if (cachedData.files && cachedData.files.length > 0) showCachePrompt();
                 }
             } catch(e) {}
         }
@@ -425,7 +363,7 @@
                     <p style="color: #888; font-size: 0.85rem;">进度: 第 ${cachedData.currentParagraphIndex + 1} 段</p>
                     <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
                         <button onclick="restoreCache()" style="padding: 8px 20px; background: #667eea; border: none; border-radius: 5px; color: white; cursor: pointer;">恢复进度</button>
-                        <button onclick="clearCacheAndHide()" style="padding: 8px 20px; background: #555; border: none; border-radius: 5px; color: white; cursor: pointer;">清除记录</button>
+                        <button onclick="clearCache()" style="padding: 8px 20px; background: #555; border: none; border-radius: 5px; color: white; cursor: pointer;">清除记录</button>
                     </div>
                 </div>
             `;
@@ -433,19 +371,11 @@
         
         function restoreCache() {
             if (!cachedData) return;
-            
-            files = cachedData.files.map(f => ({
-                name: f.name,
-                content: cachedData.allContents ? cachedData.allContents[f.name] : null
-            }));
-            
+            files = cachedData.files.map(f => ({ name: f.name, content: cachedData.allContents?.[f.name] }));
             currentFileIndex = cachedData.currentFileIndex;
             currentParagraphIndex = cachedData.currentParagraphIndex;
-            
-            if (cachedData.allContents && cachedData.files[currentFileIndex]) {
-                currentContent = cachedData.allContents[cachedData.files[currentFileIndex].name] || cachedData.currentContent || '';
-                paragraphs = currentContent.split('\n').filter(p => p.trim());
-            }
+            currentContent = cachedData.allContents?.[cachedData.files[currentFileIndex]?.name] || cachedData.currentContent || '';
+            paragraphs = currentContent.split('\n').filter(p => p.trim());
             
             const fileList = document.getElementById('fileList');
             fileList.innerHTML = '';
@@ -456,7 +386,6 @@
                 div.onclick = () => selectCachedFile(index);
                 fileList.appendChild(div);
             });
-            
             displayKaraoke(currentParagraphIndex);
             updateProgress(currentParagraphIndex + 1, paragraphs.length);
             document.getElementById('statusBar').textContent = `已恢复: ${cachedData.files[currentFileIndex].name}`;
@@ -464,20 +393,19 @@
         
         function selectCachedFile(index) {
             const f = files[index];
-            if (f && f.content) {
+            if (f?.content) {
                 currentFileIndex = index;
                 currentParagraphIndex = 0;
                 currentContent = f.content;
                 paragraphs = currentContent.split('\n').filter(p => p.trim());
                 document.querySelectorAll('.file-item').forEach((item, i) => item.classList.toggle('active', i === index));
                 displayKaraoke(-1);
-                document.getElementById('statusBar').textContent = `当前: ${f.name}`;
                 updateProgress(0, paragraphs.length);
                 saveCache();
             }
         }
         
-        function clearCacheAndHide() {
+        function clearCache() {
             localStorage.removeItem(CACHE_KEY);
             cachedData = null;
             document.getElementById('fileList').innerHTML = '';
@@ -490,8 +418,7 @@
             if (selected.length > 0) {
                 files = selected.sort((a, b) => a.name.localeCompare(b.name));
                 updateFileList();
-                localStorage.removeItem(CACHE_KEY);
-                cachedData = null;
+                clearCache();
             } else {
                 document.getElementById('statusBar').textContent = '未找到txt文件';
             }
@@ -521,7 +448,6 @@
                 paragraphs = currentContent.split('\n').filter(p => p.trim());
                 files[index].content = currentContent;
                 displayKaraoke(-1);
-                document.getElementById('statusBar').textContent = `当前: ${files[index].name}`;
                 updateProgress(0, paragraphs.length);
                 saveCache();
             };
@@ -533,66 +459,32 @@
             container.innerHTML = '';
             paragraphs.forEach((para, i) => {
                 const div = document.createElement('div');
-                div.className = 'karaoke-paragraph';
-                if (i === highlightIndex) div.classList.add('active');
-                else if (i < highlightIndex) div.classList.add('read');
+                div.className = 'karaoke-paragraph' + (i === highlightIndex ? ' active' : i < highlightIndex ? ' read' : '');
                 div.textContent = para.trim();
                 div.id = `para-${i}`;
                 div.onclick = () => jumpToParagraph(i);
                 container.appendChild(div);
             });
-            if (highlightIndex >= 0) {
-                const activeEl = document.getElementById(`para-${highlightIndex}`);
-                if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            if (highlightIndex >= 0) document.getElementById(`para-${highlightIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
         function jumpToParagraph(index) {
             if (index < 0 || index >= paragraphs.length) return;
-            speechSynthesis.cancel();
+            stopAudio();
             currentParagraphIndex = index;
             displayKaraoke(index);
             updateProgress(index + 1, paragraphs.length);
-            
             if (isPlaying || isPaused) {
-                isPaused = false;
-                isPlaying = true;
+                isPaused = false; isPlaying = true;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-                const para = paragraphs[currentParagraphIndex];
-                const thisIndex = currentParagraphIndex;
-                
-                currentUtterance = new SpeechSynthesisUtterance(para);
-                if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                    currentUtterance.voice = voices[currentVoiceIndex];
-                }
-                currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
-                currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
-                
-                currentUtterance.onstart = function() {
-                    displayKaraoke(thisIndex);
-                    updateProgress(thisIndex + 1, paragraphs.length);
-                };
-                
-                currentUtterance.onend = function() {
-                    currentParagraphIndex++;
-                    saveCache();
-                    if (isPlaying && !isPaused) readNextParagraph();
-                };
-                
-                currentUtterance.onerror = function() {
-                    currentParagraphIndex++;
-                    if (isPlaying && !isPaused) readNextParagraph();
-                };
-                
-                speechSynthesis.speak(currentUtterance);
+                speakParagraph(currentParagraphIndex);
             }
         }
         
         function seekProgress(event) {
             if (paragraphs.length === 0) return;
             const rect = document.getElementById('progressBar').getBoundingClientRect();
-            const percentage = (event.clientX - rect.left) / rect.width;
-            jumpToParagraph(Math.min(Math.floor(percentage * paragraphs.length), paragraphs.length - 1));
+            jumpToParagraph(Math.min(Math.floor(((event.clientX - rect.left) / rect.width) * paragraphs.length), paragraphs.length - 1));
         }
         
         function updateProgress(current, total) {
@@ -602,77 +494,41 @@
             document.getElementById('progressPercent').textContent = percent + '%';
         }
         
+        function stopAudio() {
+            if (audio) { audio.pause(); audio.src = ''; }
+            audioQueue = [];
+            speechSynthesis.cancel();
+        }
+        
         function togglePlayPause() {
             if (isPlaying) {
                 isPaused = true; isPlaying = false;
-                speechSynthesis.pause();
+                if (audio) audio.pause();
+                speechSynthesis.cancel();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 document.getElementById('statusBar').textContent = '已暂停';
                 updateMediaSession('', false);
             } else if (isPaused) {
                 isPaused = false; isPlaying = true;
-                speechSynthesis.resume();
-                startSilentAudio();
+                if (audio) audio.play();
                 document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-                document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
                 updateMediaSession(files[currentFileIndex]?.name || '', true);
             } else {
                 if (currentFileIndex < 0 && files.length > 0) selectFile(0);
-                if (paragraphs.length === 0) return;
-                startReading();
+                if (paragraphs.length > 0) startReading();
             }
         }
         
         function startReading() {
             if (!paragraphs.length) { document.getElementById('statusBar').textContent = '请先选择文件'; return; }
-            speechSynthesis.cancel();
-            startSilentAudio();
-            
+            stopAudio();
             isPlaying = true; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">⏸</span><span>暂停</span>';
-            document.getElementById('statusBar').textContent = `正在朗读: ${files[currentFileIndex].name}`;
-            updateMediaSession(files[currentFileIndex]?.name || '', true);
-            readNextParagraph();
-        }
-        
-        function readNextParagraph() {
-            if (!isPlaying || currentParagraphIndex >= paragraphs.length) {
-                if (currentParagraphIndex >= paragraphs.length) onReadingComplete();
-                return;
-            }
-            if (isPaused) return;
-            
-            const para = paragraphs[currentParagraphIndex];
-            const thisIndex = currentParagraphIndex;
-            
-            currentUtterance = new SpeechSynthesisUtterance(para);
-            if (currentVoiceIndex >= 0 && voices[currentVoiceIndex]) {
-                currentUtterance.voice = voices[currentVoiceIndex];
-            }
-            currentUtterance.rate = parseFloat(document.getElementById('rateSlider').value);
-            currentUtterance.pitch = parseFloat(document.getElementById('pitchSlider').value);
-            
-            currentUtterance.onstart = function() {
-                displayKaraoke(thisIndex);
-                updateProgress(thisIndex + 1, paragraphs.length);
-            };
-            
-            currentUtterance.onend = function() {
-                currentParagraphIndex++;
-                saveCache();
-                if (isPlaying && !isPaused) readNextParagraph();
-            };
-            
-            currentUtterance.onerror = function() {
-                currentParagraphIndex++;
-                if (isPlaying && !isPaused) readNextParagraph();
-            };
-            
-            speechSynthesis.speak(currentUtterance);
+            speakParagraph(currentParagraphIndex);
         }
         
         function onReadingComplete() {
-            stopSilentAudio();
+            stopAudio();
             isPlaying = false; isPaused = false;
             document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
             displayKaraoke(-1);
@@ -680,13 +536,8 @@
             updateMediaSession('', false);
             
             if (currentFileIndex < files.length - 1) {
-                document.getElementById('statusBar').textContent = '本章节朗读完成，自动播放下一章...';
-                setTimeout(function() {
-                    if (!isPlaying) {
-                        nextChapter();
-                        setTimeout(startReading, 500);
-                    }
-                }, 1000);
+                document.getElementById('statusBar').textContent = '自动播放下一章...';
+                setTimeout(() => { if (!isPlaying) { nextChapter(); setTimeout(startReading, 500); } }, 1000);
             } else {
                 document.getElementById('statusBar').textContent = '全部朗读完成';
             }
@@ -694,8 +545,7 @@
         
         function prevChapter() {
             if (currentFileIndex > 0) {
-                speechSynthesis.cancel();
-                stopSilentAudio();
+                stopAudio();
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectCachedFile(currentFileIndex - 1);
@@ -706,8 +556,7 @@
         
         function nextChapter() {
             if (currentFileIndex < files.length - 1) {
-                speechSynthesis.cancel();
-                stopSilentAudio();
+                stopAudio();
                 isPlaying = false; isPaused = false;
                 document.getElementById('playBtn').innerHTML = '<span class="icon">▶</span><span>播放</span>';
                 selectCachedFile(currentFileIndex + 1);

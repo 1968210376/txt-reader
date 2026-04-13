@@ -228,14 +228,18 @@
             }
             
             audio = new Audio(url);
+            audio.crossOrigin = 'anonymous';
             
-            audio.oncanplaythrough = function() {
+            audio.onplay = function() {
+                // 音频开始播放时更新 Media Session
                 displayKaraoke(paragraphIndex);
                 updateProgress(paragraphIndex + 1, paragraphs.length);
                 updateMediaSession(files[currentFileIndex]?.name || '', true);
+            };
+            
+            audio.oncanplaythrough = function() {
                 audio.play().catch(e => {
                     console.error('播放失败，尝试备用方案', e);
-                    // 备用方案：使用浏览器内置TTS
                     fallbackToWebSpeech(paragraphIndex);
                 });
             };
@@ -258,6 +262,12 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = parseFloat(document.getElementById('rateSlider').value);
             
+            utterance.onstart = function() {
+                displayKaraoke(paragraphIndex);
+                updateProgress(paragraphIndex + 1, paragraphs.length);
+                updateMediaSession(files[currentFileIndex]?.name || '', true);
+            };
+            
             utterance.onend = function() {
                 currentParagraphIndex++;
                 saveCache();
@@ -271,7 +281,6 @@
             };
             
             speechSynthesis.speak(utterance);
-            displayKaraoke(paragraphIndex);
             updateProgress(paragraphIndex + 1, paragraphs.length);
         }
         // ========== TTS 结束 ==========
